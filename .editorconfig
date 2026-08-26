@@ -1,0 +1,10 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+continuation_indent_size = 2
+max_line_length = 120
+
+[*.kt]
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
