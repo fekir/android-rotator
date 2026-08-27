@@ -17,6 +17,7 @@ import android.util.Log
 import android.widget.RemoteViews
 import android.widget.Toast
 import info.fekir.rotator.R;
+import android.content.pm.ServiceInfo
 
 class RotationService : Service() {
 
@@ -114,7 +115,15 @@ class RotationService : Service() {
                 return START_NOT_STICKY
             }
         }
-        startForeground(NOTIFICATION_ID, buildNotification())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // android:foregroundServiceType="specialUse" and ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            // are required on Android 14+
+            // See https://developer.android.com/about/versions/14/behavior-changes-14#fgs-types
+            startForeground(NOTIFICATION_ID,buildNotification(),ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            @Suppress("DEPRECATION")
+            startForeground(NOTIFICATION_ID,buildNotification())
+        }
         return START_NOT_STICKY
     }
 

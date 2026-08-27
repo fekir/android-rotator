@@ -30,9 +30,16 @@
 
         </activity>
 
+        <!--
+        android:foregroundServiceType="specialUse" and ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        are required on Android 14+
+        See https://developer.android.com/about/versions/14/behavior-changes-14#fgs-types
+        -->
         <service
             android:name=".RotationService"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+        />
 
         <receiver
             android:name=".BootReceiver"
