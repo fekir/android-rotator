@@ -14,6 +14,9 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import info.fekir.rotator.R;
 import android.view.WindowInsets
+import android.view.MotionEvent
+
+
 
 private data class Insets(
     val left: Int,
@@ -50,14 +53,22 @@ class MainActivity : Activity() {
         const val PADDING = 40
     }
 
-    private fun leftInset(insets: WindowInsets): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            insets.getInsets(WindowInsets.Type.systemBars()).left
-        } else {
-            @Suppress("DEPRECATION")
-            insets.systemWindowInsetLeft
-        }
-    }
+    // https://developer.android.com/guide/components/activities/activity-lifecycle
+    //
+    //              +--------------------------------------------------+
+    //              |                                                  |
+    //              +                           +----------------------+
+    //              |                           |                      |
+    //              v                           v                      |
+    // start -> onCreate() -> onStart() -> onResume() -> running -> onPause() -> onStop() -> onDestroy()
+    //              ^            ^                                                  |
+    //              |            |                                                  |
+    //              |            +-------------------- onRestart() -----------------+
+    //              |                                                               |
+    //              +--------------------------- killed ----------------------------+
+
+    private lateinit var changeSettingsCheckbox: CheckBox
+    private lateinit var notificationSettingsCheckbox: CheckBox
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,7 +81,6 @@ class MainActivity : Activity() {
         // See https://developer.android.com/about/versions/15/behavior-changes-15#edge-to-edge
         layout.setOnApplyWindowInsetsListener { view, insets ->
             val system = systemInsets(insets)
-
             view.setPadding(
                 PADDING + system.left,
                 PADDING + system.top,
@@ -80,70 +90,81 @@ class MainActivity : Activity() {
             insets
         }
 
-        val settingsButton = Button(this)
-        settingsButton.text = "Grant permissions"
+        changeSettingsCheckbox = CheckBox(this)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            changeSettingsCheckbox.isChecked = true
+        } else {
+            changeSettingsCheckbox.text = "Change system settings (required)"
+            changeSettingsCheckbox.isChecked = Settings.System.canWrite(this);
+            changeSettingsCheckbox.setOnTouchListener { _, event ->
+                if (event.action == MotionEvent.ACTION_DOWN && !changeSettingsCheckbox.isChecked) {
+                    val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,Uri.parse("package:$packageName"))
+                    startActivity(intent)
+                }
+                true
+            }
+            layout.addView(changeSettingsCheckbox)
+        }
 
-        settingsButton.setOnClickListener {
-            openPermissions()
+        notificationSettingsCheckbox = CheckBox(this)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            notificationSettingsCheckbox.isChecked = true
+        } else {
+            notificationSettingsCheckbox.text = "Notification permission (required)"
+            notificationSettingsCheckbox.isChecked = checkSelfPermission("android.permission.POST_NOTIFICATIONS") == PackageManager.PERMISSION_GRANTED
+            notificationSettingsCheckbox.setOnTouchListener { _, event ->
+                if (event.action == MotionEvent.ACTION_DOWN && !notificationSettingsCheckbox.isChecked) {
+                    requestPermissions(arrayOf("android.permission.POST_NOTIFICATIONS"), NOTIFICATION_PERMISSION_REQUEST)
+                }
+                true
+            }
+            layout.addView(notificationSettingsCheckbox)
         }
 
         val startButton = Button(this)
         startButton.text = "Start " + this.getString(R.string.app_name);
-
         startButton.setOnClickListener {
-            if (hasPermissions()) {
+            if (!changeSettingsCheckbox.isChecked || !notificationSettingsCheckbox.isChecked){
+                Toast.makeText(this,"Not all permissions are set",Toast.LENGTH_LONG).show()
+            } else {
                 val intent = Intent(this, RotationService::class.java)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(intent)
                 } else {
                     startService(intent)
                 }
-            } else {
-                openPermissions()
+                Toast.makeText(this,"Pull down the notification bar to change orientation",Toast.LENGTH_LONG).show()
             }
         }
-
-        layout.addView(settingsButton)
         layout.addView(startButton)
 
         val autostartCheckBox = CheckBox(this)
-        autostartCheckBox.text = "Start automatically on boot"
+        autostartCheckBox.text = "Start automatically on boot (optional)"
         autostartCheckBox.isChecked = RotationPrefs.isAutostartEnabled(this)
         autostartCheckBox.setOnCheckedChangeListener { _, isChecked ->
             RotationPrefs.setAutostartEnabled(this, isChecked)
         }
         layout.addView(autostartCheckBox)
 
+
+
+        val stopButton = Button(this)
+        stopButton.text = "Stop " + this.getString(R.string.app_name);
+        stopButton.setOnClickListener {
+            stopService(Intent(this, RotationService::class.java))
+        }
+        layout.addView(stopButton)
         setContentView(layout)
     }
 
-    private fun hasPermissions(): Boolean {
-        val hasNotifications =
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-                checkSelfPermission("android.permission.POST_NOTIFICATIONS") ==
-                PackageManager.PERMISSION_GRANTED
-
-        return Settings.System.canWrite(this) && hasNotifications
-    }
-
-    private fun openPermissions() {
-        if (!Settings.System.canWrite(this)) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_WRITE_SETTINGS,
-                Uri.parse("package:$packageName")
-            )
-            startActivity(intent)
-            return
+    override fun onResume() {
+        super.onResume()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            changeSettingsCheckbox.isChecked = Settings.System.canWrite(this)
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            checkSelfPermission("android.permission.POST_NOTIFICATIONS") !=
-            PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions(
-                arrayOf("android.permission.POST_NOTIFICATIONS"),
-                NOTIFICATION_PERMISSION_REQUEST
-            )
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationSettingsCheckbox.isChecked = checkSelfPermission("android.permission.POST_NOTIFICATIONS") == PackageManager.PERMISSION_GRANTED
         }
     }
+
 }
