@@ -46,7 +46,7 @@ else
 endif
 
 ANDROID_JAR   := $(shell find "$(ANDROID_SDK_ROOT)/platforms" -name "android.jar" 2>/dev/null | sort -V | tail -n1;)
-
+KEYTOOL       := /usr/bin/keytool
 # suppose we did not get anything from the user
 KOTLINC       := /usr/bin/kotlinc
 KOTLIN_STDLIB := /usr/share/kotlin/kotlinc/lib/kotlin-stdlib.jar
@@ -322,17 +322,15 @@ aligned.apk: $(ALIGNED_APK)
 DEBUG_KEYSTORE := $(CURDIR)/debug.keystore
 $(DEBUG_KEYSTORE):
 	@echo "Generating debug $@"
-	$(call run_silent, \
-		"$(KEYTOOL)" -genkeypair -v \
-			-keystore "$@" \
-			-storepass android \
-			-keypass android \
-			-alias androiddebugkey \
-			-keyalg RSA \
-			-keysize 2048 \
-			-validity 10000 \
-			-dname "CN=Android Debug,O=Android,C=US" \
-	)
+	"$(KEYTOOL)" -genkeypair -v \
+		-keystore "$@" \
+		-storepass android \
+		-keypass android \
+		-alias androiddebugkey \
+		-keyalg RSA \
+		-keysize 2048 \
+		-validity 10000 \
+		-dname "CN=Android Debug,O=Android,C=US"
 
 OUT_APK := $(BUILD_DIR)/apk/RotationSwitcher.apk
 $(OUT_APK): $(ALIGNED_APK) $(DEBUG_KEYSTORE)
