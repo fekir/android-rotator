@@ -79,19 +79,19 @@ RES_DIR      := app/src/main/res
 RES_FILES    := $(shell find "$(RES_DIR)" -type f 2>/dev/null)
 KOTLIN_FILES := $(shell find "app/src/main/kotlin" -name "*.kt" -type f 2>/dev/null)
 
-# Android - SDK
-# 17      - 37
-# 16      - 36
-# 15      - 35
-# 14      - 34
-# 13      - 33
-# 12      - 31,32
-# 11      - 30
-# 10      - 29
-#  9      - 28
-#  8      - 26,27
-#  7      - 24,25
-#  6      - 23
+# Android - SDK   - Build.VERSION.SDK_INT
+# 17      - 37    - Build.VERSION_CODES.CINNAMON_BUN
+# 16      - 36    - Build.VERSION_CODES.BAKLAVA
+# 15      - 35    - Build.VERSION_CODES.VANILLA_ICE_CREAM
+# 14      - 34    - Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+# 13      - 33    - Build.VERSION_CODES.TIRAMISU
+# 12      - 31,32 - Build.VERSION_CODES.S
+# 11      - 30    - Build.VERSION_CODES.R
+# 10      - 29    - Build.VERSION_CODES.Q
+#  9      - 28    - Build.VERSION_CODES.P
+#  8      - 26,27 - Build.VERSION_CODES.O
+#  7      - 24,25 - Build.VERSION_CODES.N
+#  6      - 23    - Build.VERSION_CODES.M
 MIN_SDK      := 23
 TARGET_SDK   := 36
 
