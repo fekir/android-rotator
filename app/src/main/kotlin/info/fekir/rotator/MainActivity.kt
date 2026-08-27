@@ -13,19 +13,72 @@ import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.Toast
 import info.fekir.rotator.R;
+import android.view.WindowInsets
+
+private data class Insets(
+    val left: Int,
+    val top: Int,
+    val right: Int,
+    val bottom: Int
+)
+
+private fun systemInsets(insets: WindowInsets): Insets {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val result = insets.getInsets(WindowInsets.Type.systemBars())
+
+        Insets(
+            left = result.left,
+            top = result.top,
+            right = result.right,
+            bottom = result.bottom
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        Insets(
+            left = insets.systemWindowInsetLeft,
+            top = insets.systemWindowInsetTop,
+            right = insets.systemWindowInsetRight,
+            bottom = insets.systemWindowInsetBottom
+        )
+    }
+}
 
 class MainActivity : Activity() {
 
     private companion object {
         const val NOTIFICATION_PERMISSION_REQUEST = 1
+        const val PADDING = 40
+    }
+
+    private fun leftInset(insets: WindowInsets): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            insets.getInsets(WindowInsets.Type.systemBars()).left
+        } else {
+            @Suppress("DEPRECATION")
+            insets.systemWindowInsetLeft
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val layout = LinearLayout(this)
-        layout.orientation = LinearLayout.VERTICAL
-        layout.setPadding(40, 40, 40, 40)
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(PADDING, PADDING, PADDING, PADDING)
+        }
+
+        // See https://developer.android.com/about/versions/15/behavior-changes-15#edge-to-edge
+        layout.setOnApplyWindowInsetsListener { view, insets ->
+            val system = systemInsets(insets)
+
+            view.setPadding(
+                PADDING + system.left,
+                PADDING + system.top,
+                PADDING + system.right,
+                PADDING + system.bottom
+            )
+            insets
+        }
 
         val settingsButton = Button(this)
         settingsButton.text = "Grant permissions"
