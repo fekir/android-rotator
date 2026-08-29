@@ -6,15 +6,18 @@ import android.content.Intent
 import android.os.Build
 
 class BootReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
-        if (!RotationPrefs.isAutostartEnabled(context)) return
+  override fun onReceive(
+    context: Context,
+    intent: Intent
+  ) {
+    if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+    if (!RotationPrefs.isAutostartEnabled(context)) return
 
-        val serviceIntent = Intent(context, RotationService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(serviceIntent)
-        } else {
-            context.startService(serviceIntent)
-        }
+    val serviceIntent = Intent(context, RotationService::class.java)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      context.startForegroundService(serviceIntent)
+    } else {
+      context.startService(serviceIntent)
     }
+  }
 }

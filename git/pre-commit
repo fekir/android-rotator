@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+HOOK="$(git rev-parse --show-toplevel)/git/pre-commit-impl";
+
+if [ -f "$HOOK" ]; then :;
+  exec "$HOOK" "$@";
+fi

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+set -u
+
+if ! command -v ktlint >/dev/null 2>&1; then
+  echo "pre-commit: ktlint not found; skipping Kotlin formatting check"
+  exit 0
+fi
+
+# Read staged Kotlin files safely, including filenames with spaces.
+mapfile -d '' files < <(
+    git diff \
+        --cached \
+        --name-only \
+        --diff-filter=ACMR \
+        -z \
+        -- '*.kt' '*.kts'
+)
+
+if [ "${#files[@]}" -eq 0 ]; then
+    exit 0
+fi
+
+failed=0
+
+for file in "${files[@]}"; do
+    echo "Checking $file"
+
+    if ! git show ":$file" |
+        ktlint --stdin >/dev/null 2>/dev/null; then
+        printf '\033[0;31m%s is not formatted correctly\033[0m\n' "$file"
+        failed=1
+    fi
+done
+
+if [ "$failed" -ne 0 ]; then
+    printf '\nSome files are not formatted correctly.
+Format them with:
+  ktlint -F <file>
+or:
+  ktlint -F .
+
+Then add the changes before committing again
+';
+    exit 1
+fi

@@ -71,6 +71,16 @@ test-env:
 		'AAPT2'       '$(AAPT2)'
 .PHONY: test-env
 
+install-hooks:
+	@if command -v git >/dev/null 2>&1; then \
+		repo_root=$$(git rev-parse --show-toplevel); \
+		hooks_dir=$$(git rev-parse --git-path hooks); \
+		mkdir -p "$$hooks_dir"; \
+		cp "$$repo_root/git/pre-commit" "$$hooks_dir/pre-commit"; \
+		chmod +x "$$hooks_dir/pre-commit"; \
+	fi
+.PHONY: install-hooks
+
 # -----------------------------------------------------------------------------
 # Source files
 
@@ -106,7 +116,7 @@ endif
 # -----------------------------------------------------------------------------
 # Targets for creating apk
 
-BUILD_DIR ?= build2
+BUILD_DIR ?= build
 clean:
 	@rm -rf "$(BUILD_DIR)"
 .PHONY: clean
@@ -319,7 +329,7 @@ $(ALIGNED_APK): $(UNSIGNED_APK)
 aligned.apk: $(ALIGNED_APK)
 .PHONY: aligned.apk
 
-DEBUG_KEYSTORE := $(CURDIR)/debug.keystore
+DEBUG_KEYSTORE := debug.keystore
 $(DEBUG_KEYSTORE):
 	@echo "Generating debug $@"
 	"$(KEYTOOL)" -genkeypair -v \
@@ -447,5 +457,5 @@ bundle-apk: bundle
 endif
 .PHONY: bundle-apk bundle
 
-all: test-env apk bundle bundle-apk
+all: test-env apk bundle bundle-apk install-hooks
 .PHONY: all
