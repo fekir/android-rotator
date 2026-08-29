@@ -1,75 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/btn_portrait"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Portrait"
-            android:textSize="12sp"
-            android:textAllCaps="false" />
-
-        <Button
-            android:id="@+id/btn_landscape"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Landscape"
-            android:textSize="12sp"
-            android:textAllCaps="false" />
-
-        <Button
-            android:id="@+id/btn_portrait_r"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Portrait(R)"
-            android:textSize="12sp"
-            android:textAllCaps="false" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/btn_landscape_r"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Landscape(R)"
-            android:textSize="12sp"
-            android:textAllCaps="false" />
-
-        <Button
-            android:id="@+id/btn_auto"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Auto"
-            android:textSize="12sp"
-            android:textAllCaps="false" />
-
-        <Button
-            android:id="@+id/btn_stop"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="X"
-            android:textSize="12sp"
-            android:textAllCaps="false" />
-
-    </LinearLayout>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+    <Button android:id="@+id/btn_portrait"    style="@style/OrientationButton" android:text="Portrait" />
+    <Button android:id="@+id/btn_landscape"   style="@style/OrientationButton" android:text="Landscape" />
+    <Button android:id="@+id/btn_portrait_r"  style="@style/OrientationButton" android:text="Portrait(R)" />
+  </LinearLayout>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+    <Button android:id="@+id/btn_landscape_r" style="@style/OrientationButton" android:text="Landscape(R)" />
+    <Button android:id="@+id/btn_auto"        style="@style/OrientationButton" android:text="Auto" />
+    <Button android:id="@+id/btn_stop"        style="@style/OrientationButton" android:text="Exit" />
+  </LinearLayout>
 
 </LinearLayout>
