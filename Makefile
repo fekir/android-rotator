@@ -3,6 +3,11 @@
 # -----------------------------------------------------------------------------
 # Make helpers
 
+# output
+## colored error
+## silent if no errors
+## support VERBOSE=1 make
+
 RED    := \033[31m
 YELLOW := \033[33m
 RESET  := \033[0m
@@ -21,28 +26,44 @@ define run_silent
     exit $$code;
 endef
 
+# make debug and make verbose targets
+DEBUG ?= 0
+ifneq ($(filter debug,$(MAKECMDGOALS)),)
+override DEBUG := 1
+endif
+debug:
+	@echo debug
+.PHONY: debug
+
+VERBOSE ?= 0
+ifneq ($(filter verbose,$(MAKECMDGOALS)),)
+override VERBOSE := 1
+endif
+verbose:
+	@:
+.PHONY: verbose
+
 # -----------------------------------------------------------------------------
-# Toolchain
+# Android toolchain
 
 ifeq ($(strip $(ANDROID_SDK_ROOT)),)
-	ANDROID_SDK_ROOT := /usr/lib/android-sdk
-	# debian adds them to PATH
-	APKSIGNER     := /usr/bin/apksigner
-	AAPT          := /usr/bin/aapt
-	AAPT2         := /usr/bin/aapt2
-	ZIPALIGN      := /usr/bin/zipalign
-	D8            := /usr/bin/d8
-	DX            := /usr/lib/android-sdk/build-tools/debian/dx
+  ANDROID_SDK_ROOT := /usr/lib/android-sdk
+  # debian adds them to PATH
+  APKSIGNER     := /usr/bin/apksigner
+  AAPT          := /usr/bin/aapt
+  AAPT2         := /usr/bin/aapt2
+  ZIPALIGN      := /usr/bin/zipalign
+  D8            := /usr/bin/d8
+  DX            := /usr/lib/android-sdk/build-tools/debian/dx
 else
-	# debian build tools are missing some pieces, thus search every tool separately
-	find-build-tool = $(shell find "$(ANDROID_SDK_ROOT)/build-tools" -type f -name "$(1)" -print 2>/dev/null | sort -V | tail -n1)
-
-	APKSIGNER := $(call find-build-tool,apksigner)
-	AAPT      := $(call find-build-tool,aapt)
-	AAPT2     := $(call find-build-tool,aapt2)
-	ZIPALIGN  := $(call find-build-tool,zipalign)
-	D8        := $(call find-build-tool,d8)
-	DX        := $(call find-build-tool,dx)
+  # debian build tools are missing some pieces, thus search every tool separately
+  find-build-tool = $(shell find "$(ANDROID_SDK_ROOT)/build-tools" -type f -name "$(1)" -print 2>/dev/null | sort -V | tail -n1)
+  APKSIGNER := $(call find-build-tool,apksigner)
+  AAPT      := $(call find-build-tool,aapt)
+  AAPT2     := $(call find-build-tool,aapt2)
+  ZIPALIGN  := $(call find-build-tool,zipalign)
+  D8        := $(call find-build-tool,d8)
+  DX        := $(call find-build-tool,dx)
 endif
 
 ANDROID_JAR   := $(shell find "$(ANDROID_SDK_ROOT)/platforms" -name "android.jar" 2>/dev/null | sort -V | tail -n1;)
@@ -58,6 +79,19 @@ BUNDLETOOL    := $(CURDIR)/bundletool-all-1.18.3.jar
 R8            := $(CURDIR)/r8.jar
 
 SOURCE_DATE_EPOCH ?= 315532800
+
+BUILD_TYPE          := debug
+AAPT_DEBUG_FLAGS    := --debug-mode
+JAVAC_DEBUG_FLAGS   := -g
+D8_DEBUG_FLAGS      := --debug
+MANIFEST_DEBUGGABLE := true
+ifneq ($(DEBUG),1)
+  BUILD_TYPE          := release
+  AAPT_DEBUG_FLAGS    :=
+  JAVAC_DEBUG_FLAGS   :=
+  D8_DEBUG_FLAGS      :=
+  MANIFEST_DEBUGGABLE := false
+endif
 
 test-env:
 	@printf '%-11s: %s\n' \
@@ -88,6 +122,7 @@ MANIFEST     := app/src/main/AndroidManifest.in.xml
 RES_DIR      := app/src/main/res
 RES_FILES    := $(shell find "$(RES_DIR)" -type f 2>/dev/null)
 KOTLIN_FILES := $(shell find "app/src/main/kotlin" -name "*.kt" -type f 2>/dev/null)
+APPNAME      := RotationSwitcher
 
 # Android - SDK   - Build.VERSION.SDK_INT
 # 17      - 37    - Build.VERSION_CODES.CINNAMON_BUN
@@ -116,9 +151,10 @@ endif
 # -----------------------------------------------------------------------------
 # Targets for creating apk
 
-BUILD_DIR ?= build
+BUILD_DIR ?= build/$(BUILD_TYPE)
+
 clean:
-	@rm -rf "$(BUILD_DIR)"
+	@rm -r build
 .PHONY: clean
 
 # create a zip file with all resources compiled by aapt2
@@ -135,7 +171,7 @@ ANDROIDMANIFEST := $(BUILD_DIR)/AndroidManifest.xml
 $(ANDROIDMANIFEST): $(MANIFEST)
 	@mkdir -p "$(@D)"
 	@echo "generate manifest file"
-	@sed -e 's|@MIN_SDK@|$(MIN_SDK)|g' -e 's|@TARGET_SDK@|$(TARGET_SDK)|g' "$<" > "$@"
+	@sed -e 's|@MIN_SDK@|$(MIN_SDK)|g' -e 's|@TARGET_SDK@|$(TARGET_SDK)|g' -e 's|@DEBUGGABLE@|$(MANIFEST_DEBUGGABLE)|g' "$<" > "$@"
 
 # create base apk and R.java with manifest and resources.arsc, .class/.dex files are missing from the apk
 GEN_DIR := $(BUILD_DIR)/gen/src
@@ -155,6 +191,7 @@ $(BASE_APK): $(RES_ZIP) $(ANDROID_JAR) $(ANDROIDMANIFEST)
 			--auto-add-overlay \
 			--java "$(GEN_DIR)" \
 			--proguard "$(AAPT_PROGUARD)" \
+			$(AAPT_DEBUG_FLAGS) \
 			$(RES_ZIP) \
 	)
 base.apk: $(BASE_APK)
@@ -166,6 +203,7 @@ $(R_CLASSES_STAMP): $(BASE_APK)
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(JAVAC)" \
+			$(JAVAC_DEBUG_FLAGS) \
 			-classpath "$(ANDROID_JAR)" \
 			-d "$(GEN_CLASS_DIR)" \
 			$$(find "$(GEN_DIR)" -name R.java -type f) \
@@ -183,6 +221,7 @@ $(R_JAVA_STAMP): $(ANDROID_JAR) $(ANDROIDMANIFEST)
 			-S "$(RES_DIR)" \
 			-I "$(ANDROID_JAR)" \
 			-M "$(ANDROIDMANIFEST)" \
+			$(AAPT_DEBUG_FLAGS) \
 			-G "$(AAPT_PROGUARD)" \
 	)
 	@touch $(R_JAVA_STAMP)
@@ -192,6 +231,7 @@ $(R_CLASSES_STAMP): $(R_JAVA_STAMP)
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(JAVAC)" \
+			$(JAVAC_DEBUG_FLAGS) \
 			-classpath "$(ANDROID_JAR)" \
 			-d "$(GEN_CLASS_DIR)" \
 			$$(find "$(GEN_DIR)" -name R.java -type f) \
@@ -202,7 +242,7 @@ r.class: $(R_CLASSES_STAMP)
 .PHONY: r.class
 
 KOTLIN_JAR := $(BUILD_DIR)/kotlin.jar
-ifneq ($(wildcard $(PROGUARD)),)
+ifneq ($(and $(wildcard $(PROGUARD)),$(filter 0,$(DEBUG))),)
 KOTLIN_JAR_UNOPT := $(BUILD_DIR)/kotlin_unopt.jar
 $(KOTLIN_JAR_UNOPT): $(KOTLIN_FILES) $(R_CLASSES_STAMP)
 	@echo "Compile Kotlin sources to .class files"
@@ -241,7 +281,7 @@ kotlin.jar: $(KOTLIN_JAR)
 .PHONY: kotlin.jar
 
 DEX_ZIP := $(BUILD_DIR)/dex.zip
-ifneq ($(wildcard $(R8)),)
+ifneq ($(and $(wildcard $(PROGUARD)),$(filter 0,$(DEBUG))),)
 $(DEX_ZIP): $(KOTLIN_JAR) $(KOTLIN_STDLIB) $(ANDROID_JAR)
 	@echo "Compile .class files to .dex files"
 	@mkdir -p "$(@D)"
@@ -263,6 +303,7 @@ $(DEX_ZIP): $(KOTLIN_JAR) $(KOTLIN_STDLIB) $(ANDROID_JAR)
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(D8)" \
+			$(D8_DEBUG_FLAGS) \
 			--output "$@" \
 			--lib "$(ANDROID_JAR)" \
 			--min-api "$(MIN_SDK)" \
@@ -313,6 +354,7 @@ $(UNSIGNED_APK): $(DEX_ZIP) $(ANDROIDMANIFEST)
 			-I "$(ANDROID_JAR)" \
 			-M "$(ANDROIDMANIFEST)" \
 			-S "$(RES_DIR)" \
+			$(AAPT_DEBUG_FLAGS) \
 			$(BUILD_DIR)/merged \
 	)
 
@@ -342,7 +384,7 @@ $(DEBUG_KEYSTORE):
 		-validity 10000 \
 		-dname "CN=Android Debug,O=Android,C=US"
 
-OUT_APK := $(BUILD_DIR)/apk/RotationSwitcher.apk
+OUT_APK := $(BUILD_DIR)/apk/$(APPNAME).apk
 $(OUT_APK): $(ALIGNED_APK) $(DEBUG_KEYSTORE)
 	@mkdir -p "$(@D)"
 	@echo "sign $< to $@"
@@ -377,6 +419,7 @@ $(BUNDLE_PROTO_APK): $(RES_ZIP) $(ANDROID_JAR) $(ANDROIDMANIFEST)
 			--min-sdk-version "$(MIN_SDK)" \
 			--auto-add-overlay \
 			--proto-format \
+			$(AAPT_DEBUG_FLAGS) \
 			--proguard "$(AAPT_PROGUARD)" \
 			-o "$@" \
 			$(RES_ZIP) \
@@ -407,9 +450,7 @@ base.zip: $(BUNDLE_MODULE_ZIP)
 .PHONY: base.zip
 
 
-
-
-OUT_AAB := $(BUNDLE_DIR)/app-debug.aab
+OUT_AAB := $(BUNDLE_DIR)/$(APPNAME).aab
 $(OUT_AAB): $(BUNDLE_MODULE_ZIP)
 	@mkdir -p "$(@D)"
 	@rm -f "$@"
@@ -442,7 +483,7 @@ $(BUNDLE_APKS): $(OUT_AAB) $(DEBUG_KEYSTORE)
 			--key-pass=pass:android \
 	)
 
-BUNDLE_APK := $(BUNDLE_DIR)/RotationSwitcher.apk
+BUNDLE_APK := $(BUNDLE_DIR)/$(APPNAME).apk
 $(BUNDLE_APK): $(BUNDLE_APKS)
 	@echo "Create $@ from $^"
 	@mkdir -p "$(@D)"
