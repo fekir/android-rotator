@@ -80,11 +80,12 @@ R8            := $(CURDIR)/r8.jar
 
 SOURCE_DATE_EPOCH ?= 315532800
 
-BUILD_TYPE          := debug
-AAPT_DEBUG_FLAGS    := --debug-mode
-JAVAC_DEBUG_FLAGS   := -g
-D8_DEBUG_FLAGS      := --debug
-MANIFEST_DEBUGGABLE := true
+BUILD_TYPE              := debug
+AAPT_DEBUG_FLAGS        := --debug-mode
+JAVAC_DEBUG_FLAGS       := -g
+D8_DEBUG_FLAGS          := --debug
+MANIFEST_DEBUGGABLE     := true
+ZIPALIGN_ALIGNMENT_ARGS := -p
 ifneq ($(DEBUG),1)
   BUILD_TYPE          := release
   AAPT_DEBUG_FLAGS    :=
@@ -92,17 +93,24 @@ ifneq ($(DEBUG),1)
   D8_DEBUG_FLAGS      :=
   MANIFEST_DEBUGGABLE := false
 endif
+ifneq ($(findstring -P,$(shell "$(ZIPALIGN)" 2>&1)),)
+  ZIPALIGN_ALIGNMENT_ARGS := -P 16
+endif
 
 test-env:
-	@printf '%-11s: %s\n' \
-		'ANDROID_JAR' '$(ANDROID_JAR)' \
-		'APKSIGNER'   '$(APKSIGNER)' \
-		'ZIPALIGN'    '$(ZIPALIGN)' \
-		'D8'          '$(D8)' \
-		'DX'          '$(DX)' \
-		'PROGUARD'    '$(PROGUARD)' \
-		'AAPT'        '$(AAPT)'\
-		'AAPT2'       '$(AAPT2)'
+	@printf 'Build Environment:\n'
+	@printf ' %-24s: %s\n' \
+		'ANDROID_JAR'             '$(ANDROID_JAR)' \
+		'APKSIGNER'               '$(APKSIGNER)' \
+		'ZIPALIGN'                '$(ZIPALIGN)' \
+		'ZIPALIGN_ALIGNMENT_ARGS' '$(ZIPALIGN_ALIGNMENT_ARGS)' \
+		'D8'                      '$(D8)' \
+		'D8_FLAGS'                '$(D8_DEBUG_FLAGS)' \
+		'DX'                      '$(DX)' \
+		'PROGUARD'                '$(PROGUARD)' \
+		'AAPT'                    '$(AAPT)' \
+		'AAPT2'                   '$(AAPT2)' \
+		'AAPT(2)_FLAGS'           '$(AAPT_DEBUG_FLAGS)'
 .PHONY: test-env
 
 install-hooks:
@@ -281,8 +289,8 @@ kotlin.jar: $(KOTLIN_JAR)
 .PHONY: kotlin.jar
 
 DEX_ZIP := $(BUILD_DIR)/dex.zip
-ifneq ($(and $(wildcard $(PROGUARD)),$(filter 0,$(DEBUG))),)
-$(DEX_ZIP): $(KOTLIN_JAR) $(KOTLIN_STDLIB) $(ANDROID_JAR)
+ifneq ($(and $(wildcard $(R8)),$(filter 0,$(DEBUG))),)
+$(DEX_ZIP): $(KOTLIN_JAR) $(R8) $(ANDROID_JAR)
 	@echo "Compile .class files to .dex files"
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
@@ -366,7 +374,7 @@ unsigned.apk: $(UNSIGNED_APK)
 ALIGNED_APK := $(BUILD_DIR)/apk/aligned.apk
 $(ALIGNED_APK): $(UNSIGNED_APK)
 	@echo "zip-align $< to $@"
-	$(call run_silent,"$(ZIPALIGN)" -f -p 4 "$<" "$@")
+	$(call run_silent,"$(ZIPALIGN)" $(ZIPALIGN_ALIGNMENT_ARGS) -f 4 "$<" "$@")
 
 aligned.apk: $(ALIGNED_APK)
 .PHONY: aligned.apk
