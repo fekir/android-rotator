@@ -3,7 +3,7 @@ package info.fekir.rotator
 import android.content.Context
 
 object RotationPrefs {
-  private const val PREFS_NAME = "rotation_switcher"
+  private const val PREFS_NAME = "rotator"
   private const val KEY_LAST_ROTATION = "last_rotation"
   private const val KEY_AUTOSTART = "autostart_enabled"
   private const val NO_ROTATION = -1

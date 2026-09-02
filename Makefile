@@ -130,7 +130,7 @@ MANIFEST     := app/src/main/AndroidManifest.in.xml
 RES_DIR      := app/src/main/res
 RES_FILES    := $(shell find "$(RES_DIR)" -type f 2>/dev/null)
 KOTLIN_FILES := $(shell find "app/src/main/kotlin" -name "*.kt" -type f 2>/dev/null)
-APPNAME      := RotationSwitcher
+APPNAME      := Rotator
 
 # Android - SDK   - Build.VERSION.SDK_INT
 # 17      - 37    - Build.VERSION_CODES.CINNAMON_BUN
