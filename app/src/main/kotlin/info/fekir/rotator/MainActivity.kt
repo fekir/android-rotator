@@ -1,6 +1,9 @@
 package info.fekir.rotator
 
+import android.Manifest
 import android.app.Activity
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -43,12 +46,80 @@ private fun systemInsets(insets: WindowInsets): Insets =
     )
   }
 
-class MainActivity : Activity() {
-  private companion object {
-    const val NOTIFICATION_PERMISSION_REQUEST = 1
-    const val PADDING = 40
+private const val NOTIFICATION_CHANNEL_ID = "general_notifications"
+private const val NOTIFICATION_PERMISSION_REQUEST = 1
+private const val PADDING = 40
+
+private fun areNotificationsEnabled(context: Context): Boolean {
+  assert(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+
+  val notificationManager =
+    context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+  if (!notificationManager.areNotificationsEnabled()) {
+    return false
   }
 
+  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    val channel =
+      notificationManager.getNotificationChannel(NOTIFICATION_CHANNEL_ID)
+
+    if (channel != null &&
+      channel.importance == NotificationManager.IMPORTANCE_NONE
+    ) {
+      return false
+    }
+  }
+
+  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+    context.checkSelfPermission(
+      Manifest.permission.POST_NOTIFICATIONS
+    ) != PackageManager.PERMISSION_GRANTED
+  ) {
+    return false
+  }
+
+  return true
+}
+
+private fun configureNotificationCheckbox(
+  checkbox: CheckBox,
+  activity: Activity
+) {
+  assert(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+  checkbox.isChecked = areNotificationsEnabled(activity)
+
+  checkbox.setOnTouchListener { _, event ->
+    if (event.action == MotionEvent.ACTION_DOWN && !checkbox.isChecked) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        activity.requestPermissions(
+          arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+          NOTIFICATION_PERMISSION_REQUEST
+        )
+      } else {
+        val intent =
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+              putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
+              putExtra(
+                Settings.EXTRA_CHANNEL_ID,
+                NOTIFICATION_CHANNEL_ID
+              )
+            }
+          } else {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+              putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
+            }
+          }
+
+        activity.startActivity(intent)
+      }
+    }
+    true
+  }
+}
+
+class MainActivity : Activity() {
   // https://developer.android.com/guide/components/activities/activity-lifecycle
   //
   //              +--------------------------------------------------+
@@ -104,21 +175,14 @@ class MainActivity : Activity() {
     }
 
     notificationSettingsCheckbox = CheckBox(this)
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+      // Note: it is possible to mute an Application on Android 6 too, but
+      // * I found no way to query if the application has bene muted
+      //  * one has to mute the application explicitely, user is not asked to grant permission
       notificationSettingsCheckbox.isChecked = true
     } else {
       notificationSettingsCheckbox.text = "Notification permission (required)"
-      notificationSettingsCheckbox.isChecked =
-        checkSelfPermission("android.permission.POST_NOTIFICATIONS") == PackageManager.PERMISSION_GRANTED
-      notificationSettingsCheckbox.setOnTouchListener { _, event ->
-        if (event.action == MotionEvent.ACTION_DOWN && !notificationSettingsCheckbox.isChecked) {
-          requestPermissions(
-            arrayOf("android.permission.POST_NOTIFICATIONS"),
-            NOTIFICATION_PERMISSION_REQUEST
-          )
-        }
-        true
-      }
+      configureNotificationCheckbox(notificationSettingsCheckbox, this)
       layout.addView(notificationSettingsCheckbox)
     }
 
@@ -161,9 +225,8 @@ class MainActivity : Activity() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       changeSettingsCheckbox.isChecked = Settings.System.canWrite(this)
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      notificationSettingsCheckbox.isChecked =
-        checkSelfPermission("android.permission.POST_NOTIFICATIONS") == PackageManager.PERMISSION_GRANTED
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      notificationSettingsCheckbox.isChecked = areNotificationsEnabled(this)
     }
   }
 }
