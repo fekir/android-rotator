@@ -45,7 +45,7 @@ endif
 BUILD_DIR ?= build/$(BUILD_TYPE)
 
 clean:
-	@rm -r build
+	@rm -rf build
 .PHONY: clean
 
 # create a zip file with all resources compiled by aapt2
