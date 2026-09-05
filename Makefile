@@ -51,7 +51,7 @@ clean:
 # create a zip file with all resources compiled by aapt2
 RES_ZIP := $(BUILD_DIR)/resources.zip
 $(RES_ZIP): $(RES_FILES) $(ANDROID_JAR)
-	@echo "generate archive $@ from following resources $^"
+	$(info # generate archive $@ from following resources $^)
 	@mkdir -p "$(@D)"
 	$(call run_silent,"$(AAPT2)" compile --dir "$(RES_DIR)" -o "$(RES_ZIP)" )
 resources.zip: $(RES_ZIP)
@@ -61,7 +61,7 @@ resources.zip: $(RES_ZIP)
 ANDROIDMANIFEST := $(BUILD_DIR)/AndroidManifest.xml
 $(ANDROIDMANIFEST): $(MANIFEST)
 	@mkdir -p "$(@D)"
-	@echo "generate manifest file"
+	$(info # generate manifest file)
 	@sed -e 's|@MIN_SDK@|$(MIN_SDK)|g' -e 's|@TARGET_SDK@|$(TARGET_SDK)|g' -e 's|@DEBUGGABLE@|$(MANIFEST_DEBUGGABLE)|g' "$<" > "$@"
 
 # create base apk and R.java with manifest and resources.arsc, .class/.dex files are missing from the apk
@@ -71,7 +71,7 @@ R_CLASSES_STAMP := $(BUILD_DIR)/gen/.r-classes.stamp
 ifneq ($(wildcard $(AAPT2)),)
 BASE_APK := $(BUILD_DIR)/apk/base.apk
 $(BASE_APK): $(RES_ZIP) $(ANDROID_JAR) $(ANDROIDMANIFEST)
-	@echo "generate $@ and R.java from $^"
+	$(info # generate $@ and R.java from $^)
 	@mkdir -p "$(@D)" "$(GEN_DIR)"
 	$(call run_silent, \
 		"$(AAPT2)" link \
@@ -90,7 +90,7 @@ base.apk: $(BASE_APK)
 
 GEN_CLASS_DIR := $(BUILD_DIR)/gen/classes
 $(R_CLASSES_STAMP): $(BASE_APK)
-	@echo "generate R.class from R.java"
+	$(info # generate R.class from R.java)
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(JAVAC)" \
@@ -104,7 +104,7 @@ $(R_CLASSES_STAMP): $(BASE_APK)
 else
 R_JAVA_STAMP := $(BUILD_DIR)/gen/.r-java.stamp
 $(R_JAVA_STAMP): $(ANDROID_JAR) $(ANDROIDMANIFEST)
-	@echo "generate $@ and R.java from $^"
+	$(info # generate $@ and R.java from $^)
 	@mkdir -p "$(@D)" "$(GEN_DIR)"
 	$(call run_silent, \
 		"$(AAPT)" package \
@@ -118,7 +118,7 @@ $(R_JAVA_STAMP): $(ANDROID_JAR) $(ANDROIDMANIFEST)
 	@touch $(R_JAVA_STAMP)
 
 $(R_CLASSES_STAMP): $(R_JAVA_STAMP)
-	@echo "generate R.class from R.java"
+	$(info # generate R.class from R.java)
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(JAVAC)" \
@@ -136,7 +136,7 @@ KOTLIN_JAR := $(BUILD_DIR)/kotlin.jar
 ifneq ($(and $(wildcard $(PROGUARD)),$(filter 0,$(DEBUG))),)
 KOTLIN_JAR_UNOPT := $(BUILD_DIR)/kotlin_unopt.jar
 $(KOTLIN_JAR_UNOPT): $(KOTLIN_FILES) $(R_CLASSES_STAMP)
-	@echo "Compile Kotlin sources to .class files"
+	$(info # Compile Kotlin sources to .class files)
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(KOTLINC)" \
@@ -147,7 +147,7 @@ $(KOTLIN_JAR_UNOPT): $(KOTLIN_FILES) $(R_CLASSES_STAMP)
 # NOTE: as alternative to -dontwarn search for annotation
 # my current kotlinc seems to bring /usr/share/kotlin/kotlinc/lib/annotations-13.0.jar
 $(KOTLIN_JAR): $(KOTLIN_JAR_UNOPT) $(R_CLASSES_STAMP) $(RULES_PROGUARD)
-	@echo "Optimize .class files"
+	$(info # Optimize .class files)
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(PROGUARD)" \
@@ -159,7 +159,7 @@ $(KOTLIN_JAR): $(KOTLIN_JAR_UNOPT) $(R_CLASSES_STAMP) $(RULES_PROGUARD)
 	)
 else
 $(KOTLIN_JAR): $(KOTLIN_FILES) $(R_CLASSES_STAMP)
-	@echo "Compile Kotlin sources to .class files"
+	$(info # Compile Kotlin sources to .class files)
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(KOTLINC)" \
@@ -174,7 +174,7 @@ kotlin.jar: $(KOTLIN_JAR)
 DEX_ZIP := $(BUILD_DIR)/dex.zip
 ifneq ($(and $(wildcard $(R8)),$(filter 0,$(DEBUG))),)
 $(DEX_ZIP): $(KOTLIN_JAR) $(R8) $(ANDROID_JAR)
-	@echo "Compile .class files to .dex files"
+	$(info # Compile .class files to .dex files)
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(JAVA)" -jar "$(R8)" \
@@ -190,7 +190,10 @@ $(DEX_ZIP): $(KOTLIN_JAR) $(R8) $(ANDROID_JAR)
 	)
 else ifneq ($(wildcard $(D8)),)
 $(DEX_ZIP): $(KOTLIN_JAR) $(KOTLIN_STDLIB) $(ANDROID_JAR)
-	@echo "Compile .class files to .dex files"
+	$(info # Compile .class files to .dex files)
+ifeq ($(wildcard $(R8)),)
+	$(warning $(YELLOW)R8 not found, fallback to D8, consider providing R8 to get smaller packages$(RESET))
+endif
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(D8)" \
@@ -203,7 +206,10 @@ $(DEX_ZIP): $(KOTLIN_JAR) $(KOTLIN_STDLIB) $(ANDROID_JAR)
 	)
 else
 $(DEX_ZIP): $(KOTLIN_JAR) $(KOTLIN_STDLIB) $(ANDROID_JAR)
-	@echo "Compile .class files to .dex files"
+	$(info # Compile .class files to .dex files)
+ifeq ($(wildcard $(R8)),)
+	$(warning $(YELLOW)R8 not found, fallback to DX, consider providing R8 to get smaller packages$(RESET))
+endif
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
 		"$(DX)" \
@@ -228,7 +234,7 @@ dex.zip: $(DEX_ZIP)
 UNSIGNED_APK := $(BUILD_DIR)/apk/unsigned.apk
 ifneq ($(wildcard $(AAPT2)),)
 $(UNSIGNED_APK): $(BASE_APK) $(DEX_ZIP)
-	@echo "merge base.apk and dex files"
+	$(info # merge base.apk and dex files)
 	@mkdir -p $(BUILD_DIR)/merged
 	@cp "$(BASE_APK)" $(UNSIGNED_APK)
 	$(call run_silent,unzip -q "$(DEX_ZIP)" -d $(BUILD_DIR)/merged)
@@ -236,7 +242,7 @@ $(UNSIGNED_APK): $(BASE_APK) $(DEX_ZIP)
 	@rm -rf "$(BUILD_DIR)/merged"
 else
 $(UNSIGNED_APK): $(DEX_ZIP) $(ANDROIDMANIFEST)
-	@echo "Package dex with manifest and libraries"
+	$(info # Package dex with manifest and libraries)
 	@mkdir -p "$(@D)" $(BUILD_DIR)/merged
 	$(call run_silent,unzip -q "$(DEX_ZIP)" -d $(BUILD_DIR)/merged)
 	$(call run_silent, \
@@ -256,7 +262,7 @@ unsigned.apk: $(UNSIGNED_APK)
 
 ALIGNED_APK := $(BUILD_DIR)/apk/aligned.apk
 $(ALIGNED_APK): $(UNSIGNED_APK)
-	@echo "zip-align $< to $@"
+	$(info # zip-align $< to $@)
 	$(call run_silent,"$(ZIPALIGN)" $(ZIPALIGN_ALIGNMENT_ARGS) -f 4 "$<" "$@")
 
 aligned.apk: $(ALIGNED_APK)
@@ -264,7 +270,7 @@ aligned.apk: $(ALIGNED_APK)
 
 DEBUG_KEYSTORE := debug.keystore
 $(DEBUG_KEYSTORE):
-	@echo "Generating debug $@"
+	$(info # Generating debug $@)
 	"$(KEYTOOL)" -genkeypair -v \
 		-keystore "$@" \
 		-storepass android \
@@ -278,7 +284,7 @@ $(DEBUG_KEYSTORE):
 OUT_APK := $(BUILD_DIR)/apk/$(APPNAME).apk
 $(OUT_APK): $(ALIGNED_APK) $(DEBUG_KEYSTORE)
 	@mkdir -p "$(@D)"
-	@echo "sign $< to $@"
+	$(info # sign $< to $@)
 	$(call run_silent, \
 		"$(APKSIGNER)" sign \
 			--ks "$(DEBUG_KEYSTORE)" \
@@ -295,14 +301,18 @@ apk: $(OUT_APK)
 # -----------------------------------------------------------------------------
 # Targets for creating aab + apk
 
-ifneq ($(wildcard $(BUNDLETOOL)),)
+ifeq ($(wildcard $(BUNDLETOOL)),)
+bundle:
+	$(error $(RED)bundletool $(BUNDLETOOL) not found$(RESET))
+bundle-apk: bundle
+else
 BUNDLE_DIR := $(BUILD_DIR)/bundle
 
 
 BUNDLE_PROTO_APK := $(BUNDLE_DIR)/proto.apk
 $(BUNDLE_PROTO_APK): $(RES_ZIP) $(ANDROID_JAR) $(ANDROIDMANIFEST)
 	@mkdir -p "$(@D)"
-	@echo "Generate $@ from $^"
+	$(info # Generate $@ from $^)
 	$(call run_silent, \
 		"$(AAPT2)" link \
 			-I "$(ANDROID_JAR)" \
@@ -322,7 +332,7 @@ proto.apk: $(BUNDLE_PROTO_APK)
 BUNDLE_MODULE_DIR := $(BUNDLE_DIR)/base
 BUNDLE_MODULE_ZIP := $(BUNDLE_DIR)/base.zip
 $(BUNDLE_MODULE_ZIP): $(BUNDLE_PROTO_APK) $(DEX_ZIP)
-	@echo "Preparing Android App Bundle module..."
+	$(info # Preparing Android App Bundle module...)
 
 	@rm -rf "$(BUNDLE_MODULE_DIR)"
 	@mkdir -p "$(BUNDLE_MODULE_DIR)"
@@ -345,21 +355,21 @@ OUT_AAB := $(BUNDLE_DIR)/$(APPNAME).aab
 $(OUT_AAB): $(BUNDLE_MODULE_ZIP)
 	@mkdir -p "$(@D)"
 	@rm -f "$@"
-	@echo "Creating Android App Bundle..."
+	$(info # Creating Android App Bundle...)
 	$(call run_silent, \
 		$(JAVA) -jar $(BUNDLETOOL) build-bundle \
 			--modules="$(BUNDLE_MODULE_ZIP)" \
 			--output="$@" \
 	)
 
-	@echo "Validating Android App Bundle..."
+	$(info # Validating Android App Bundle...)
 	$(call run_silent, $(JAVA) -jar $(BUNDLETOOL) validate --bundle="$@" > /dev/null )
 
 bundle: $(OUT_AAB)
 
 BUNDLE_APKS := $(BUNDLE_DIR)/app.apks
 $(BUNDLE_APKS): $(OUT_AAB) $(DEBUG_KEYSTORE)
-	@echo "Create $@ from $^"
+	$(info # Create $@ from $^)
 	@mkdir -p "$(@D)"
 	@rm -f "$@"
 
@@ -376,16 +386,11 @@ $(BUNDLE_APKS): $(OUT_AAB) $(DEBUG_KEYSTORE)
 
 BUNDLE_APK := $(BUNDLE_DIR)/$(APPNAME).apk
 $(BUNDLE_APK): $(BUNDLE_APKS)
-	@echo "Create $@ from $^"
+	$(info # Create $@ from $^)
 	@mkdir -p "$(@D)"
 	@rm -f "$@"
 	@unzip -p "$(BUNDLE_APKS)" universal.apk > "$@"
 bundle-apk: $(BUNDLE_APK)
-else
-bundle:
-	@echo "No bundletool found"
-	@exit 1;
-bundle-apk: bundle
 endif
 .PHONY: bundle-apk bundle
 

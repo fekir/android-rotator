@@ -3,9 +3,18 @@ ifndef RUN_SILENT_PATTERN
   $(error RUN_SILENT_PATTERN must be defined before including run-silent.mk)
 endif
 
-RED    := \033[31m
-YELLOW := \033[33m
-RESET  := \033[0m
+ESC :=
+RED :=
+RESET :=
+YELLOW :=
+ifneq ($(or $(FORCE_COLOR),$(and $(if $(NO_COLOR),,$(MAKE_TERMOUT)),$(MAKE_TERMERR))),)
+  ESC    := $(shell printf '\033')
+  RED    := $(ESC)[31m
+  RESET  := $(ESC)[0m
+  YELLOW := $(ESC)[33m
+endif
+
+
 define run_silent
     @\
     output=$$( ( $(1) ) 2>&1 ); \
