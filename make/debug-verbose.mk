@@ -27,7 +27,7 @@ ifneq ($(filter debug,$(MAKECMDGOALS)),)
 override DEBUG := 1
 endif
 debug:
-	@echo debug
+	@:
 .PHONY: debug
 
 VERBOSE ?= 0

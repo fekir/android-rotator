@@ -391,3 +391,7 @@ endif
 
 all: test-env apk bundle bundle-apk git-install-hooks
 .PHONY: all
+
+lint: $(ANDROIDMANIFEST)
+	$(call run_silent, $(LINT) --showall --offline --classpath "$(ANDROID_JAR):$(GEN_CLASS_DIR)" --sdk-home $(ANDROID_SDK_ROOT) --sources ./app/src --resources ./app/src/main/res $(dir $(ANDROIDMANIFEST)) )
+.PHONY: lint

@@ -8,6 +8,7 @@ ifdef BUILD_TOOLS_ROOT
   ZIPALIGN  ?= $(BUILD_TOOLS_ROOT)/zipalign
   D8        ?= $(BUILD_TOOLS_ROOT)/d8
   DX        ?= $(BUILD_TOOLS_ROOT)/dx
+  LINT      ?= $(BUILD_TOOLS_ROOT)/lint
   BUILD_TOOLS_ROOT_DISPLAY := $(BUILD_TOOLS_ROOT)
 else
   BUILD_TOOLS_ROOT_DISPLAY := <undefined>
@@ -22,6 +23,7 @@ ifeq ($(strip $(ANDROID_SDK_ROOT)),)
   ZIPALIGN      ?= /usr/bin/zipalign
   D8            ?= /usr/bin/d8
   DX            ?= $(ANDROID_SDK_ROOT)/build-tools/debian/dx
+  LINT          ?= /usr/bin/lint
 else
   # No version specified: since debian build-tools ($(ANDROID_SDK_ROOT)/build-tools/debian) are incomplete
   # thus search every tool separately
@@ -33,6 +35,7 @@ else
   ZIPALIGN  ?= $(call find-build-tool,zipalign)
   D8        ?= $(call find-build-tool,d8)
   DX        ?= $(call find-build-tool,dx)
+  LINT      ?= $(call find-build-tool,lint)
 endif
 
 ifdef ANDROID_JAR
@@ -85,6 +88,7 @@ test-env:
 		'D8'                      '$(D8)' \
 		'D8_FLAGS'                '$(D8_DEBUG_FLAGS)' \
 		'DX'                      '$(DX)' \
+		'LINT'                    '$(LINT)' \
 		'PROGUARD'                '$(PROGUARD)' \
 		'AAPT'                    '$(AAPT)' \
 		'AAPT2'                   '$(AAPT2)' \
