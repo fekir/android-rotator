@@ -132,7 +132,7 @@ class RotationService : Service() {
         return START_NOT_STICKY
       }
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
       // android:foregroundServiceType="specialUse" and ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
       // are required on Android 14+
       // See https://developer.android.com/about/versions/14/behavior-changes-14#fgs-types

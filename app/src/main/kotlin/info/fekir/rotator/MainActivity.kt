@@ -62,7 +62,9 @@ private const val PADDING = 40
 
 private fun areNotificationsEnabled(context: Context): Boolean {
   assert(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-
+  if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+    return true
+  }
   val notificationManager =
     context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -108,14 +110,11 @@ private fun configureNotificationCheckbox(
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
               putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
-              putExtra(
-                Settings.EXTRA_CHANNEL_ID,
-                NOTIFICATION_CHANNEL_ID
-              )
+              putExtra(Settings.EXTRA_CHANNEL_ID, NOTIFICATION_CHANNEL_ID)
             }
           } else {
-            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-              putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
+            Intent("android.settings.APP_NOTIFICATION_SETTINGS").apply {
+              putExtra("android.provider.extra.APP_PACKAGE", activity.packageName)
             }
           }
 
