@@ -3,6 +3,7 @@ package info.fekir.rotator
 import android.Manifest
 import android.app.Activity
 import android.app.NotificationManager
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -141,6 +142,7 @@ class MainActivity : Activity() {
 
   private lateinit var changeSettingsCheckbox: ActionCheckBox
   private lateinit var notificationSettingsCheckbox: ActionCheckBox
+  private lateinit var autoRevokeSettingsCheckbox: ActionCheckBox
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -190,6 +192,26 @@ class MainActivity : Activity() {
       layout.addView(notificationSettingsCheckbox)
     }
 
+    autoRevokeSettingsCheckbox = ActionCheckBox(this)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+      autoRevokeSettingsCheckbox.isChecked = true
+    } else {
+      autoRevokeSettingsCheckbox.isChecked = this.packageManager.isAutoRevokeWhitelisted
+      autoRevokeSettingsCheckbox.text = "Keep permissions"
+      autoRevokeSettingsCheckbox.onPressed = {
+        if (!autoRevokeSettingsCheckbox.isChecked) {
+          val intent = Intent("android.intent.action.AUTO_REVOKE_PERMISSIONS", Uri.parse("package:$packageName"))
+
+          try {
+            startActivity(intent)
+          } catch (_: ActivityNotFoundException) {
+            // This settings screen is unavailable on this device.
+          }
+        }
+      }
+      layout.addView(autoRevokeSettingsCheckbox)
+    }
+
     val startButton = Button(this)
     startButton.text = "Start " + this.getString(R.string.app_name)
     startButton.setOnClickListener {
@@ -231,6 +253,9 @@ class MainActivity : Activity() {
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
       notificationSettingsCheckbox.isChecked = areNotificationsEnabled(this)
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      autoRevokeSettingsCheckbox.isChecked = this.packageManager.isAutoRevokeWhitelisted
     }
   }
 }
