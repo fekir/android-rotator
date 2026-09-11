@@ -40,7 +40,6 @@ class ActionCheckBox(
 private fun systemInsets(insets: WindowInsets): Insets =
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
     val result = insets.getInsets(WindowInsets.Type.systemBars())
-
     Insets(
       left = result.left,
       top = result.top,
@@ -66,20 +65,15 @@ private fun areNotificationsEnabled(context: Context): Boolean {
   if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
     return true
   }
-  val notificationManager =
-    context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+  val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
   if (!notificationManager.areNotificationsEnabled()) {
     return false
   }
 
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-    val channel =
-      notificationManager.getNotificationChannel(NOTIFICATION_CHANNEL_ID)
-
-    if (channel != null &&
-      channel.importance == NotificationManager.IMPORTANCE_NONE
-    ) {
+    val channel = notificationManager.getNotificationChannel(NOTIFICATION_CHANNEL_ID)
+    if (channel?.importance == NotificationManager.IMPORTANCE_NONE) {
       return false
     }
   }
