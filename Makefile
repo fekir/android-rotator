@@ -5,6 +5,7 @@ RUN_SILENT_PATTERN := warning|deprecated|obsolete
 include make/debug-verbose.mk
 include make/toolchain.mk
 include make/git.mk
+-include make/user.mk
 
 # -----------------------------------------------------------------------------
 # Source files
@@ -177,11 +178,11 @@ kotlin.jar: $(KOTLIN_JAR)
 
 DEX_ZIP := $(BUILD_DIR)/dex.zip
 ifneq ($(and $(wildcard $(R8)),$(filter 0,$(DEBUG))),)
-$(DEX_ZIP): $(KOTLIN_JAR) $(R8) $(ANDROID_JAR)
+$(DEX_ZIP): $(KOTLIN_JAR) $(ANDROID_JAR)
 	$(info # Compile .class files to .dex files)
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
-		"$(JAVA)" -jar "$(R8)" \
+		"$(R8)" \
 			--release \
 			--min-api "$(MIN_SDK)" \
 			--lib "$(ANDROID_JAR)" \
@@ -212,7 +213,7 @@ else
 $(DEX_ZIP): $(KOTLIN_JAR) $(KOTLIN_STDLIB) $(ANDROID_JAR)
 	$(info # Compile .class files to .dex files)
 ifeq ($(wildcard $(R8)),)
-	$(warning $(YELLOW)R8 not found, fallback to DX, consider providing R8 to get smaller packages$(RESET))
+	$(warning $(YELLOW)R8 and D8 not found, fallback to DX, consider providing R8 to get smaller packages$(RESET))
 endif
 	@mkdir -p "$(@D)"
 	$(call run_silent, \
@@ -224,7 +225,7 @@ endif
 			"$(KOTLIN_JAR)" \
 	)
 	@# remove kotlin builtin annotation files
-	$(call run_silent, zip -d build2/dex.zip 'kotlin/*.kotlin_builtins' 'META-INF/*kotlin_module' 'META-INF/MANIFEST.MF' )
+	$(call run_silent, zip -d $(DEX_ZIP) 'kotlin/*.kotlin_builtins' 'META-INF/*kotlin_module' 'META-INF/MANIFEST.MF' )
 
 endif
 dex.zip: $(DEX_ZIP)
@@ -405,3 +406,36 @@ all: test-env apk bundle bundle-apk git-install-hooks
 lint: $(ANDROIDMANIFEST)
 	$(call run_silent, $(LINT) --showall --offline --classpath "$(ANDROID_JAR):$(GEN_CLASS_DIR)" --sdk-home $(ANDROID_SDK_ROOT) --sources ./app/src --resources ./app/src/main/res $(dir $(ANDROIDMANIFEST)) )
 .PHONY: lint
+
+define HELP_TEXT
+Use "make test-env" to see the environment picked up by make.
+The listed tools can be overwritte one-by-one, althogh some affect others, for example ANDROID_SDK_ROOT and BUILD_TOOLS_ROOT.
+
+Use "make apk" to create an APK.
+Use "make bundle" to create an android bundle.
+To create a bundle and an apk from the bundle use "make bundle-apk"
+
+Use DEBUG to create a debug version of the apk/bundle
+USE VERBOSE to have make print out all commands and outputs, not only in case of warnings and errors
+
+Relevant targets:
+  all ( apk + bundle + bundle-apk + git-install-hooks )
+  apk
+  bundle
+  bundle-apk
+  clean
+  git-install-hooks
+  help
+  lint
+
+  test-env
+
+Modifiers:
+  debug   (or DEBUG=1   as environment variable)
+  verbose (or VERBOSE=1 as environment variable)
+endef
+
+.DEFAULT_GOAL := help
+.PHONY: help
+help:
+	$(info $(HELP_TEXT))

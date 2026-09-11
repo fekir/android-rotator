@@ -27,8 +27,6 @@ For building the `.apk` it uses `aapt2`, and falls back to `aapt` if not present
 Optimizing `.class` files with `proguard` is optional.
 It supports R8, D8 or DX (in this order) for creating `.dex` files.
 
-Note that R8 is currently not packaged anywhere, at least similarly to bundletool it's just one https://maven.google.com/web/index.html#com.android.tools:r8[jar] file to download (`VERSION="9.4.14"; wget "https://storage.googleapis.com/r8-releases/raw/${VERSION}/r8.jar"`)
-
 == Usage
 
  * Start the application

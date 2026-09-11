@@ -1,96 +1,96 @@
 # -----------------------------------------------------------------------------
 # Android toolchain
 
+ifneq ($(filter undefined default,$(origin LINT)),)
+  # GNU make automatically defines LINT
+  undefine LINT
+endif
+
+ANDROID_SDK_ROOT_ := /usr/lib/android-sdk
+ifdef ANDROID_SDK_ROOT
+  ANDROID_SDK_ROOT_ := $(ANDROID_SDK_ROOT)
+endif
+find-build-tool      = $(shell find "$(ANDROID_SDK_ROOT_)/build-tools" -maxdepth 2 -type f -name "$(1)" -print 2>/dev/null | sort -V | tail -n1)
+find-cmdline-tool    = $(shell find "$(ANDROID_SDK_ROOT_)/cmdline-tools" -maxdepth 3 -type f -name "$(1)" -print 2>/dev/null | sort -V | tail -n1)
+
+# NOTE: dx searched separately, it is part of debian sdk, not of newer official sdk, and is not in PATH
 ifdef BUILD_TOOLS_ROOT
-  APKSIGNER ?= $(BUILD_TOOLS_ROOT)/apksigner
-  AAPT      ?= $(BUILD_TOOLS_ROOT)/aapt
-  AAPT2     ?= $(BUILD_TOOLS_ROOT)/aapt2
-  ZIPALIGN  ?= $(BUILD_TOOLS_ROOT)/zipalign
-  D8        ?= $(BUILD_TOOLS_ROOT)/d8
-  DX        ?= $(BUILD_TOOLS_ROOT)/dx
-  LINT      ?= $(BUILD_TOOLS_ROOT)/lint
-  BUILD_TOOLS_ROOT_DISPLAY := $(BUILD_TOOLS_ROOT)
+  BUILD_TOOLS_ROOT_   := $(BUILD_TOOLS_ROOT)
+  CMDLINE_TOOLS_      := $(shell find "$(BUILD_TOOLS_ROOT_)/../../cmdline-tools" -maxdepth 1 -type d -print 2>/dev/null | grep -v debian | sort -V | tail -n1)/bin
+  DX                  ?= $(BUILD_TOOLS_ROOT)/dx
+else ifdef ANDROID_SDK_ROOT
+  # filter /usr/lib/android-sdk/debian, since it is mostly empty
+  BUILD_TOOLS_ROOT_   := $(shell find "$(ANDROID_SDK_ROOT)/build-tools"   -maxdepth 1 -type d -print 2>/dev/null | grep -v debian | sort -V | tail -n1)
+  CMDLINE_TOOLS_      := $(shell find "$(ANDROID_SDK_ROOT)/cmdline-tools" -maxdepth 1 -type d -print 2>/dev/null | grep -v debian | sort -V | tail -n1)/bin
 else
-  BUILD_TOOLS_ROOT_DISPLAY := <undefined>
+  BUILD_TOOLS_ROOT_   := /usr/bin
+  CMDLINE_TOOLS_      := /usr/bin
 endif
 
-ifeq ($(strip $(ANDROID_SDK_ROOT)),)
-  ANDROID_SDK_ROOT := /usr/lib/android-sdk
-  # debian adds them to PATH
-  APKSIGNER     ?= /usr/bin/apksigner
-  AAPT          ?= /usr/bin/aapt
-  AAPT2         ?= /usr/bin/aapt2
-  ZIPALIGN      ?= /usr/bin/zipalign
-  D8            ?= /usr/bin/d8
-  DX            ?= $(ANDROID_SDK_ROOT)/build-tools/debian/dx
-  LINT          ?= /usr/bin/lint
-else
-  # No version specified: since debian build-tools ($(ANDROID_SDK_ROOT)/build-tools/debian) are incomplete
-  # thus search every tool separately
-  find-build-tool = $(shell find "$(ANDROID_SDK_ROOT)/build-tools" -type f -name "$(1)" -print 2>/dev/null | sort -V | tail -n1)
+ANDROID_SDK_ROOT := $(ANDROID_SDK_ROOT_)
+AAPT        ?= $(BUILD_TOOLS_ROOT_)/aapt
+AAPT2       ?= $(BUILD_TOOLS_ROOT_)/aapt2
+ANDROID_JAR ?= $(shell find "$(ANDROID_SDK_ROOT_)/platforms" -name android.jar 2>/dev/null | sort -V | tail -n 1 )
+APKSIGNER   ?= $(BUILD_TOOLS_ROOT_)/apksigner
+D8          ?= $(BUILD_TOOLS_ROOT_)/d8
+DX          ?= $(call find-build-tool,dx)
+LINT        ?= $(CMDLINE_TOOLS_)/lint
+R8          ?= $(call find-cmdline-tool,r8)
+ZIPALIGN    ?= $(BUILD_TOOLS_ROOT_)/zipalign
 
-  APKSIGNER ?= $(call find-build-tool,apksigner)
-  AAPT      ?= $(call find-build-tool,aapt)
-  AAPT2     ?= $(call find-build-tool,aapt2)
-  ZIPALIGN  ?= $(call find-build-tool,zipalign)
-  D8        ?= $(call find-build-tool,d8)
-  DX        ?= $(call find-build-tool,dx)
-  LINT      ?= $(call find-build-tool,lint)
-endif
 
-ifdef ANDROID_JAR
-  # use as-is
-else ifdef ANDROID_API
-  ANDROID_JAR := $(ANDROID_SDK_ROOT)/platforms/android-$(ANDROID_API)/android.jar
-else
-  # search newest
-  ANDROID_JAR := $(shell find "$(ANDROID_SDK_ROOT)/platforms" -name android.jar 2>/dev/null | sort -V | tail -n 1 )
-endif
-
+BUNDLETOOL    ?= $(CURDIR)/bundletool-all-1.18.3.jar
+JAVA          ?= /usr/bin/java
+JAVAC         ?= /usr/bin/javac
 KEYTOOL       ?= /usr/bin/keytool
 KOTLINC       ?= /usr/bin/kotlinc
-KOTLIN_STDLIB ?= /usr/share/kotlin/kotlinc/lib/kotlin-stdlib.jar
 KOTLIN_ANNOT  ?= $(shell find "/usr/share/kotlin/kotlinc/lib/" -name 'annotations-*.jar' 2>/dev/null | sort -V | tail -n1;)
-JAVAC         ?= /usr/bin/javac
-JAVA          ?= /usr/bin/java
+KOTLIN_STDLIB ?= /usr/share/kotlin/kotlinc/lib/kotlin-stdlib.jar
 PROGUARD      ?= /usr/bin/proguard
-BUNDLETOOL    ?= $(CURDIR)/bundletool-all-1.18.3.jar
-R8            ?= $(CURDIR)/r8.jar
 
 SOURCE_DATE_EPOCH ?= 315532800
 
 BUILD_TYPE              := debug
 AAPT_DEBUG_FLAGS        := --debug-mode
-JAVAC_DEBUG_FLAGS       := -g
 D8_DEBUG_FLAGS          := --debug
+JAVAC_DEBUG_FLAGS       := -g
 MANIFEST_DEBUGGABLE     := true
 ZIPALIGN_ALIGNMENT_ARGS := -p
 ifneq ($(DEBUG),1)
-  BUILD_TYPE          := release
-  AAPT_DEBUG_FLAGS    :=
-  JAVAC_DEBUG_FLAGS   :=
-  D8_DEBUG_FLAGS      :=
-  MANIFEST_DEBUGGABLE := false
+  BUILD_TYPE            := release
+  AAPT_DEBUG_FLAGS      :=
+  D8_DEBUG_FLAGS        :=
+  JAVAC_DEBUG_FLAGS     :=
+  MANIFEST_DEBUGGABLE   := false
 endif
 ifneq ($(findstring -P,$(shell "$(ZIPALIGN)" 2>&1)),)
   ZIPALIGN_ALIGNMENT_ARGS := -P 16
 endif
 
+var_status  = $(if $($(1)),$($(1)),$(YELLOW)<unset>$(RESET))
+path_status = $($(1))$(if $(wildcard $($(1))),,$(RED) <missing>$(RESET))
+
+.PHONY: test-env
 test-env:
 	@printf 'Build Environment:\n'
-	@printf ' %-24s: %s\n' \
-		'ANDROID_SDK_ROOT'        '$(ANDROID_SDK_ROOT)' \
-		'BUILD_TOOLS_ROOT'        '$(BUILD_TOOLS_ROOT_DISPLAY)' \
-		'ANDROID_JAR'             '$(ANDROID_JAR)' \
-		'APKSIGNER'               '$(APKSIGNER)' \
-		'ZIPALIGN'                '$(ZIPALIGN)' \
-		'ZIPALIGN_ALIGNMENT_ARGS' '$(ZIPALIGN_ALIGNMENT_ARGS)' \
-		'D8'                      '$(D8)' \
-		'D8_FLAGS'                '$(D8_DEBUG_FLAGS)' \
-		'DX'                      '$(DX)' \
-		'LINT'                    '$(LINT)' \
-		'PROGUARD'                '$(PROGUARD)' \
-		'AAPT'                    '$(AAPT)' \
-		'AAPT2'                   '$(AAPT2)' \
-		'AAPT(2)_FLAGS'           '$(AAPT_DEBUG_FLAGS)'
-.PHONY: test-env
+	@printf ' %-28s: %s\n' \
+		'ANDROID_SDK_ROOT'          '$(call var_status,ANDROID_SDK_ROOT)' \
+		'BUILD_TOOLS_ROOT'          '$(call var_status,BUILD_TOOLS_ROOT)'
+	@printf '\n'
+	@printf ' %-28s: %s\n' \
+		'aapt'                      '$(call path_status,AAPT)' \
+		'aapt2'                     '$(call path_status,AAPT2)' \
+		'  AAPT2_FLAGS'             '$(AAPT_DEBUG_FLAGS)' \
+		'  AAPT_FLAGS'              '$(AAPT_DEBUG_FLAGS)' \
+		'ANDROID_JAR'               '$(call path_status,ANDROID_JAR)' \
+		'apksigner'                 '$(call path_status,APKSIGNER)' \
+		'd8'                        '$(call path_status,D8)' \
+		'  D8_FLAGS'                '$(D8_DEBUG_FLAGS)' \
+		'dx'                        '$(call path_status,DX)' \
+		'javac'                     '$(call path_status,JAVAC)' \
+		'kotlinc'                   '$(call path_status,KOTLINC)' \
+		'lint'                      '$(call path_status,LINT)' \
+		'proguard'                  '$(call path_status,PROGUARD)' \
+		'r8'                        '$(call path_status,R8)' \
+		'zipalign'                  '$(call path_status,ZIPALIGN)' \
+		'  ZIPALIGN_ALIGNMENT_ARGS' '$(ZIPALIGN_ALIGNMENT_ARGS)'
