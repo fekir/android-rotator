@@ -21,14 +21,17 @@ APPNAME      := Rotator
 # 15      - 35    - Build.VERSION_CODES.VANILLA_ICE_CREAM
 # 14      - 34    - Build.VERSION_CODES.UPSIDE_DOWN_CAKE
 # 13      - 33    - Build.VERSION_CODES.TIRAMISU
-# 12      - 31,32 - Build.VERSION_CODES.S
+# 12      - 31,32 - Build.VERSION_CODES.S, S_V2
 # 11      - 30    - Build.VERSION_CODES.R
 # 10      - 29    - Build.VERSION_CODES.Q
 #  9      - 28    - Build.VERSION_CODES.P
-#  8      - 26,27 - Build.VERSION_CODES.O
+#  8      - 26,27 - Build.VERSION_CODES.O, O_MR1
 #  7      - 24,25 - Build.VERSION_CODES.N
 #  6      - 23    - Build.VERSION_CODES.M
-MIN_SDK      := 23
+#  5      - 21,22 - Build.VERSION_CODES.LOLLIPOP, LOLLIPOP_MR1
+#  4.4W   - 20    - Build.VERSION_CODES.KITKAT_WATCH
+#  4      - 14-19 - Build.VERSION_CODES.ICE_CREAM_SANDWICH, ICE_CREAM_SANDWICH_MR1, JELLY_BEAN, JELLY_BEAN_MR1, JELLY_BEAN_MR2, KITKAT
+MIN_SDK      := 21
 TARGET_SDK   := 36
 
 ifneq ($(wildcard $(R8)),)
@@ -77,7 +80,7 @@ $(BASE_APK): $(RES_ZIP) $(ANDROID_JAR) $(ANDROIDMANIFEST)
 		"$(AAPT2)" link \
 			-I "$(ANDROID_JAR)" \
 			--manifest "$(ANDROIDMANIFEST)" \
-			--min-sdk-version "$(MIN_SDK)" \
+			--min-sdk-version "$(MIN_SDK)" --target-sdk-version "$(TARGET_SDK)" \
 			-o "$@" \
 			--auto-add-overlay \
 			--java "$(GEN_DIR)" \
@@ -109,6 +112,7 @@ $(R_JAVA_STAMP): $(ANDROID_JAR) $(ANDROIDMANIFEST)
 	$(call run_silent, \
 		"$(AAPT)" package \
 			-f -m -J "$(GEN_DIR)" \
+			--min-sdk-version "$(MIN_SDK)" --target-sdk-version "$(TARGET_SDK)" \
 			-S "$(RES_DIR)" \
 			-I "$(ANDROID_JAR)" \
 			-M "$(ANDROIDMANIFEST)" \
@@ -250,6 +254,7 @@ $(UNSIGNED_APK): $(DEX_ZIP) $(ANDROIDMANIFEST)
 			-f -F "$@" \
 			-I "$(ANDROID_JAR)" \
 			-M "$(ANDROIDMANIFEST)" \
+			--min-sdk-version "$(MIN_SDK)" --target-sdk-version "$(TARGET_SDK)" \
 			-S "$(RES_DIR)" \
 			$(AAPT_DEBUG_FLAGS) \
 			$(BUILD_DIR)/merged \
@@ -317,7 +322,7 @@ $(BUNDLE_PROTO_APK): $(RES_ZIP) $(ANDROID_JAR) $(ANDROIDMANIFEST)
 		"$(AAPT2)" link \
 			-I "$(ANDROID_JAR)" \
 			--manifest "$(ANDROIDMANIFEST)" \
-			--min-sdk-version "$(MIN_SDK)" \
+			--min-sdk-version "$(MIN_SDK)" --target-sdk-version "$(TARGET_SDK)" \
 			--auto-add-overlay \
 			--proto-format \
 			$(AAPT_DEBUG_FLAGS) \

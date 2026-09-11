@@ -19,6 +19,10 @@ import android.widget.RemoteViews
 import android.widget.Toast
 import info.fekir.rotator.R
 
+private fun canWriteSystemSettings(context: Service): Boolean =
+  Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+    Settings.System.canWrite(context)
+
 class RotationService : Service() {
   companion object {
     private const val CHANNEL_ID = "rotation_control"
@@ -50,7 +54,9 @@ class RotationService : Service() {
   private fun applyPersistedRotation() {
     val rotation = RotationPrefs.loadRotation(this)
     lockedRotation = rotation
-    if (!Settings.System.canWrite(this)) return
+    if (!canWriteSystemSettings(this)) {
+      return
+    }
 
     if (rotation != null) {
       applyLockedRotation(rotation)
@@ -87,8 +93,9 @@ class RotationService : Service() {
 
   private fun reapplyLockedRotationIfNeeded() {
     val rotation = lockedRotation ?: return
-    if (!Settings.System.canWrite(this)) return
-
+    if (canWriteSystemSettings(this)) {
+      return
+    }
     val currentAccel =
       Settings.System.getInt(contentResolver, Settings.System.ACCELEROMETER_ROTATION, 1)
     val currentUserRotation =
@@ -238,7 +245,7 @@ class RotationService : Service() {
   }
 
   private fun setRotation(rotation: Int) {
-    if (!Settings.System.canWrite(this)) {
+    if (!canWriteSystemSettings(this)) {
       Toast
         .makeText(
           this,
@@ -282,7 +289,7 @@ class RotationService : Service() {
   }
 
   private fun setAutoRotation() {
-    if (!Settings.System.canWrite(this)) {
+    if (!canWriteSystemSettings(this)) {
       Toast
         .makeText(
           this,
