@@ -26,6 +26,16 @@ private data class Insets(
   val bottom: Int
 )
 
+class ActionCheckBox(
+  context: Context
+) : CheckBox(context) {
+  var onPressed: (() -> Unit)? = null
+
+  override fun toggle() {
+    onPressed?.invoke()
+  }
+}
+
 private fun systemInsets(insets: WindowInsets): Insets =
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
     val result = insets.getInsets(WindowInsets.Type.systemBars())
@@ -83,19 +93,16 @@ private fun areNotificationsEnabled(context: Context): Boolean {
 }
 
 private fun configureNotificationCheckbox(
-  checkbox: CheckBox,
+  checkbox: ActionCheckBox,
   activity: Activity
 ) {
   assert(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
   checkbox.isChecked = areNotificationsEnabled(activity)
 
-  checkbox.setOnTouchListener { _, event ->
-    if (event.action == MotionEvent.ACTION_DOWN && !checkbox.isChecked) {
+  checkbox.onPressed = {
+    if (!checkbox.isChecked) {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        activity.requestPermissions(
-          arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-          NOTIFICATION_PERMISSION_REQUEST
-        )
+        activity.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_PERMISSION_REQUEST)
       } else {
         val intent =
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -115,7 +122,6 @@ private fun configureNotificationCheckbox(
         activity.startActivity(intent)
       }
     }
-    true
   }
 }
 
@@ -134,8 +140,8 @@ class MainActivity : Activity() {
   //              |                                                               |
   //              +--------------------------- killed ----------------------------+
 
-  private lateinit var changeSettingsCheckbox: CheckBox
-  private lateinit var notificationSettingsCheckbox: CheckBox
+  private lateinit var changeSettingsCheckbox: ActionCheckBox
+  private lateinit var notificationSettingsCheckbox: ActionCheckBox
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -158,23 +164,22 @@ class MainActivity : Activity() {
       insets
     }
 
-    changeSettingsCheckbox = CheckBox(this)
+    changeSettingsCheckbox = ActionCheckBox(this)
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       changeSettingsCheckbox.isChecked = true
     } else {
       changeSettingsCheckbox.text = "Change system settings (required)"
       changeSettingsCheckbox.isChecked = Settings.System.canWrite(this)
-      changeSettingsCheckbox.setOnTouchListener { _, event ->
-        if (event.action == MotionEvent.ACTION_DOWN && !changeSettingsCheckbox.isChecked) {
+      changeSettingsCheckbox.onPressed = {
+        if (!changeSettingsCheckbox.isChecked) {
           val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:$packageName"))
           startActivity(intent)
         }
-        true
       }
       layout.addView(changeSettingsCheckbox)
     }
 
-    notificationSettingsCheckbox = CheckBox(this)
+    notificationSettingsCheckbox = ActionCheckBox(this)
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
       // Note: it is possible to mute an Application on Android 6 too, but
       // * I found no way to query if the application has bene muted
