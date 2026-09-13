@@ -17,6 +17,7 @@ import android.view.WindowInsets
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.Toast
 import info.fekir.rotator.R
 
@@ -141,6 +142,13 @@ class MainActivity : Activity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
+    val scrollView = ScrollView(this)
+    scrollView.layoutParams =
+      LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.MATCH_PARENT
+      )
+
     val layout =
       LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
@@ -237,7 +245,8 @@ class MainActivity : Activity() {
       stopService(Intent(this, RotationService::class.java))
     }
     layout.addView(stopButton)
-    setContentView(layout)
+    scrollView.addView(layout)
+    setContentView(scrollView)
   }
 
   override fun onResume() {
