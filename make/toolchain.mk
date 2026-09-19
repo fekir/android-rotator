@@ -9,6 +9,9 @@ endif
 ANDROID_SDK_ROOT_ := /usr/lib/android-sdk
 ifdef ANDROID_SDK_ROOT
   ANDROID_SDK_ROOT_ := $(ANDROID_SDK_ROOT)
+  PLATFORMT_TOOLS_ROOT_ := $(ANDROID_SDK_ROOT)/platform-tools
+else
+  PLATFORMT_TOOLS_ROOT_ := /usr/bin
 endif
 find-build-tool      = $(shell find "$(ANDROID_SDK_ROOT_)/build-tools" -maxdepth 2 -type f -name "$(1)" -print 2>/dev/null | sort -V | tail -n1)
 find-cmdline-tool    = $(shell find "$(ANDROID_SDK_ROOT_)/cmdline-tools" -maxdepth 3 -type f -name "$(1)" -print 2>/dev/null | sort -V | tail -n1)
@@ -30,6 +33,7 @@ endif
 ANDROID_SDK_ROOT := $(ANDROID_SDK_ROOT_)
 AAPT        ?= $(BUILD_TOOLS_ROOT_)/aapt
 AAPT2       ?= $(BUILD_TOOLS_ROOT_)/aapt2
+ADB         ?= $(PLATFORMT_TOOLS_ROOT_)/adb
 ANDROID_JAR ?= $(shell find "$(ANDROID_SDK_ROOT_)/platforms" -name android.jar 2>/dev/null | sort -V | tail -n 1 )
 APKSIGNER   ?= $(BUILD_TOOLS_ROOT_)/apksigner
 D8          ?= $(BUILD_TOOLS_ROOT_)/d8
@@ -67,17 +71,18 @@ ifneq ($(findstring -P,$(shell "$(ZIPALIGN)" 2>&1)),)
   ZIPALIGN_ALIGNMENT_ARGS := -P 16
 endif
 
-var_status  = $(if $($(1)),$($(1)),$(YELLOW)<unset>$(RESET))
+var_status = $(if $(filter undefined,$(origin $(1))),$(YELLOW)<unset>$(RESET),$(if $($(1)),$($(1)),$(YELLOW)<unset>$(RESET)))
 path_status = $($(1))$(if $(wildcard $($(1))),,$(RED) <missing>$(RESET))
 
 .PHONY: test-env
 test-env:
-	@printf 'Build Environment:\n'
-	@printf ' %-28s: %s\n' \
+	@\
+	printf 'Build Environment:\n'; \
+	printf ' %-28s: %s\n' \
 		'ANDROID_SDK_ROOT'          '$(call var_status,ANDROID_SDK_ROOT)' \
-		'BUILD_TOOLS_ROOT'          '$(call var_status,BUILD_TOOLS_ROOT)'
-	@printf '\n'
-	@printf ' %-28s: %s\n' \
+		'BUILD_TOOLS_ROOT'          '$(call var_status,BUILD_TOOLS_ROOT)' \
+	; printf '\n'; \
+	printf ' %-28s: %s\n' \
 		'aapt'                      '$(call path_status,AAPT)' \
 		'aapt2'                     '$(call path_status,AAPT2)' \
 		'  AAPT2_FLAGS'             '$(AAPT_DEBUG_FLAGS)' \
@@ -93,4 +98,4 @@ test-env:
 		'proguard'                  '$(call path_status,PROGUARD)' \
 		'r8'                        '$(call path_status,R8)' \
 		'zipalign'                  '$(call path_status,ZIPALIGN)' \
-		'  ZIPALIGN_ALIGNMENT_ARGS' '$(ZIPALIGN_ALIGNMENT_ARGS)'
+		'  ZIPALIGN_ALIGNMENT_ARGS' '$(ZIPALIGN_ALIGNMENT_ARGS)' \

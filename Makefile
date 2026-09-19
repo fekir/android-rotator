@@ -1,5 +1,13 @@
 # FIXME: use jar instead of zip, is output reproducibe?
 
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-builtin-rules
+ifeq ($(filter -j% --jobs%,$(MAKEFLAGS)),)
+MAKEFLAGS += -j$(shell nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)
+endif
+
+.DELETE_ON_ERROR:
+.EXTRA_PREREQS := $(MAKEFILE_LIST)
 
 RUN_SILENT_PATTERN := warning|deprecated|obsolete
 include make/debug-verbose.mk
@@ -277,6 +285,7 @@ aligned.apk: $(ALIGNED_APK)
 .PHONY: aligned.apk
 
 DEBUG_KEYSTORE := debug.keystore
+$(DEBUG_KEYSTORE): .EXTRA_PREREQS :=
 $(DEBUG_KEYSTORE):
 	$(info # Generating debug $@)
 	"$(KEYTOOL)" -genkeypair -v \
@@ -405,7 +414,7 @@ endif
 all: test-env apk bundle bundle-apk git-install-hooks
 .PHONY: all
 
-lint: $(ANDROIDMANIFEST)
+lint: $(KOTLIN_JAR)
 	$(call run_silent, $(LINT) --showall --offline --classpath "$(ANDROID_JAR):$(GEN_CLASS_DIR)" --sdk-home $(ANDROID_SDK_ROOT) --sources ./app/src --resources ./app/src/main/res $(dir $(ANDROIDMANIFEST)) )
 .PHONY: lint
 

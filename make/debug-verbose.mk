@@ -3,11 +3,14 @@ ifndef RUN_SILENT_PATTERN
   $(error RUN_SILENT_PATTERN must be defined before including run-silent.mk)
 endif
 
+force_color = $(if $(filter undefined,$(origin FORCE_COLOR)),,$(FORCE_COLOR))
+no_color    = $(if $(filter undefined,$(origin NO_COLOR)),,$(NO_COLOR))
+
 ESC :=
 RED :=
 RESET :=
 YELLOW :=
-ifneq ($(or $(FORCE_COLOR),$(and $(if $(NO_COLOR),,$(MAKE_TERMOUT)),$(MAKE_TERMERR))),)
+ifneq ($(or $(force_color),$(and $(if $(no_color),,$(MAKE_TERMOUT)),$(MAKE_TERMERR))),)
   ESC    := $(shell printf '\033')
   RED    := $(ESC)[31m
   RESET  := $(ESC)[0m
@@ -35,14 +38,14 @@ DEBUG ?= 0
 ifneq ($(filter debug,$(MAKECMDGOALS)),)
 override DEBUG := 1
 endif
+.PHONY: debug
 debug:
 	@:
-.PHONY: debug
 
 VERBOSE ?= 0
 ifneq ($(filter verbose,$(MAKECMDGOALS)),)
 override VERBOSE := 1
 endif
+.PHONY: verbose
 verbose:
 	@:
-.PHONY: verbose

@@ -1,6 +1,8 @@
 
+.PHONY: git-install-hooks
 git-install-hooks:
-	@if command -v git >/dev/null 2>&1; then :; \
+	@\
+	if command -v git >/dev/null 2>&1; then :; \
 		repo_root=$$(git rev-parse --show-toplevel); \
 		hooks_dir=$$(git rev-parse --git-path hooks); \
 		mkdir -p "$$hooks_dir"; \
@@ -9,5 +11,4 @@ git-install-hooks:
 		printf 'Installed hook to %s\n' "$$hooks_dir/pre-commit"; \
 	else :; \
 		printf "git is not available"; \
-	fi
-.PHONY: git-install-hooks
+	fi \
