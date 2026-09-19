@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Rotator</string>
-</resources>
+  <string name="app_name">Rotator</string>
 
+  <string name="keep_permissions">Keep permissions</string>
+  <string name="change_system_settings_permissions">Change system settings (required)</string>
+  <string name="notification_permissions">Notification permission (required)</string>
+  <string name="start_on_boot_permission">Start automatically on boot (optional)</string>
+  <string name="start_button">Start %1$s</string>
+  <string name="stop_button">Stop %1$s</string>
+
+  <string name="portrait">Portrait</string>
+  <string name="landscape">Landscape</string>
+  <string name="portrait_r">Portrait(R)</string>
+  <string name="landscape_r">Landscape(R)</string>
+  <string name="auto">Auto</string>
+  <string name="stop">Stop</string>
+
+</resources>

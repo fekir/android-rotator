@@ -171,7 +171,7 @@ class MainActivity : Activity() {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       changeSettingsCheckbox.isChecked = true
     } else {
-      changeSettingsCheckbox.text = "Change system settings (required)"
+      changeSettingsCheckbox.text = getString(R.string.change_system_settings_permissions)
       changeSettingsCheckbox.isChecked = Settings.System.canWrite(this)
       changeSettingsCheckbox.onPressed = {
         if (!changeSettingsCheckbox.isChecked) {
@@ -189,7 +189,7 @@ class MainActivity : Activity() {
       //  * one has to mute the application explicitely, user is not asked to grant permission
       notificationSettingsCheckbox.isChecked = true
     } else {
-      notificationSettingsCheckbox.text = "Notification permission (required)"
+      notificationSettingsCheckbox.text = getString(R.string.notification_permissions)
       configureNotificationCheckbox(notificationSettingsCheckbox, this)
       layout.addView(notificationSettingsCheckbox)
     }
@@ -199,7 +199,7 @@ class MainActivity : Activity() {
       autoRevokeSettingsCheckbox.isChecked = true
     } else {
       autoRevokeSettingsCheckbox.isChecked = this.packageManager.isAutoRevokeWhitelisted
-      autoRevokeSettingsCheckbox.text = "Keep permissions"
+      autoRevokeSettingsCheckbox.text = getString(R.string.keep_permissions)
       autoRevokeSettingsCheckbox.onPressed = {
         if (!autoRevokeSettingsCheckbox.isChecked) {
           val intent = Intent("android.intent.action.AUTO_REVOKE_PERMISSIONS", Uri.parse("package:$packageName"))
@@ -215,7 +215,7 @@ class MainActivity : Activity() {
     }
 
     val startButton = Button(this)
-    startButton.text = "Start " + this.getString(R.string.app_name)
+    startButton.text = getString(R.string.start_button, getString(R.string.app_name))
     startButton.setOnClickListener {
       if (!changeSettingsCheckbox.isChecked || !notificationSettingsCheckbox.isChecked) {
         Toast.makeText(this, "Not all permissions are set", Toast.LENGTH_LONG).show()
@@ -232,7 +232,7 @@ class MainActivity : Activity() {
     layout.addView(startButton)
 
     val autostartCheckBox = CheckBox(this)
-    autostartCheckBox.text = "Start automatically on boot (optional)"
+    autostartCheckBox.text = getString(R.string.start_on_boot_permission)
     autostartCheckBox.isChecked = RotationPrefs.isAutostartEnabled(this)
     autostartCheckBox.setOnCheckedChangeListener { _, isChecked ->
       RotationPrefs.setAutostartEnabled(this, isChecked)
@@ -240,7 +240,7 @@ class MainActivity : Activity() {
     layout.addView(autostartCheckBox)
 
     val stopButton = Button(this)
-    stopButton.text = "Stop " + this.getString(R.string.app_name)
+    stopButton.text = getString(R.string.stop_button, getString(R.string.app_name))
     stopButton.setOnClickListener {
       stopService(Intent(this, RotationService::class.java))
     }

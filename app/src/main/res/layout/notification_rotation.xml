@@ -6,14 +6,14 @@
 >
 
   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-    <Button android:id="@+id/btn_portrait"    style="@style/OrientationButton" android:text="Portrait" />
-    <Button android:id="@+id/btn_landscape"   style="@style/OrientationButton" android:text="Landscape" />
-    <Button android:id="@+id/btn_portrait_r"  style="@style/OrientationButton" android:text="Portrait(R)" />
+    <Button android:id="@+id/btn_portrait"    style="@style/OrientationButton" android:text="@string/portrait" />
+    <Button android:id="@+id/btn_landscape"   style="@style/OrientationButton" android:text="@string/landscape" />
+    <Button android:id="@+id/btn_portrait_r"  style="@style/OrientationButton" android:text="@string/portrait_r" />
   </LinearLayout>
   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-    <Button android:id="@+id/btn_landscape_r" style="@style/OrientationButton" android:text="Landscape(R)" />
-    <Button android:id="@+id/btn_auto"        style="@style/OrientationButton" android:text="Auto" />
-    <Button android:id="@+id/btn_stop"        style="@style/OrientationButton" android:text="Exit" />
+    <Button android:id="@+id/btn_landscape_r" style="@style/OrientationButton" android:text="@string/landscape_r" />
+    <Button android:id="@+id/btn_auto"        style="@style/OrientationButton" android:text="@string/auto" />
+    <Button android:id="@+id/btn_stop"        style="@style/OrientationButton" android:text="@string/stop" />
   </LinearLayout>
 
 </LinearLayout>
