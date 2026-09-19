@@ -15,6 +15,8 @@ RES_DIR      := app/src/main/res
 RES_FILES    := $(shell find "$(RES_DIR)" -type f 2>/dev/null)
 KOTLIN_FILES := $(shell find "app/src/main/kotlin" -name "*.kt" -type f 2>/dev/null)
 APPNAME      := Rotator
+VERSION_CODE := 1
+VERSION_NAME := 0.0.$(VERSION_CODE)
 
 # Android - SDK   - Build.VERSION.SDK_INT
 # 17      - 37    - Build.VERSION_CODES.CINNAMON_BUN
@@ -66,7 +68,7 @@ ANDROIDMANIFEST := $(BUILD_DIR)/AndroidManifest.xml
 $(ANDROIDMANIFEST): $(MANIFEST)
 	@mkdir -p "$(@D)"
 	$(info # generate manifest file)
-	@sed -e 's|@MIN_SDK@|$(MIN_SDK)|g' -e 's|@TARGET_SDK@|$(TARGET_SDK)|g' -e 's|@DEBUGGABLE@|$(MANIFEST_DEBUGGABLE)|g' "$<" > "$@"
+	@sed -e 's|@MIN_SDK@|$(MIN_SDK)|g' -e 's|@TARGET_SDK@|$(TARGET_SDK)|g' -e 's|@VERSION_CODE@|$(VERSION_CODE)|g' -e 's|@VERSION_NAME@|$(VERSION_NAME)|g' "$<" > "$@"
 
 # create base apk and R.java with manifest and resources.arsc, .class/.dex files are missing from the apk
 GEN_DIR := $(BUILD_DIR)/gen/src
