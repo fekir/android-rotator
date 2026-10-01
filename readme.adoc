@@ -4,7 +4,7 @@ Application for rotating the screen of an Android device in portrait mode, rever
 
 Compared to other programs, this program
 
- * is explicitely written for working from Android 6 and contemporary Android versions
+ * is explicitly written for working from Android 6 and contemporary Android versions
  * has minimal disk usage
  * has no advertisement
  * is free
@@ -15,17 +15,19 @@ For those interested in the source code:
 
  * source code is kept to a minimum
  * builds completely offline, it does not download anything during the build and packaging process
- * builds should be completeley https://reproducible-builds.org/[reproducible]
- * it does not use any external dependencies outside of the standard libraries and Android API
+ * builds should be completely https://reproducible-builds.org/[reproducible]
+ * it does not use any external dependencies outside the standard libraries and Android API
  * does not use `gradle` as build system, but `make` (execute `make apk` to create the `apk`)
- * can be build on a "normal" debian environment by installing the relevant packages from the official repository, no need to use something that has not been packaged
+ * can be built on a "normal" Debian environment by installing the relevant packages from the official repository, no need to use something that has not been packaged
 
-For building an `.aab` you'll need to download https://developer.android.com/tools/bundletool#build_app_bundle[bundletool], it's the only tool I could not find packaged in Debian that is required for creating an `.aab`.
+For building an `.aab` you'll need to download https://developer.android.com/tools/bundletool#build_app_bundle[bundletool], it's the only tool I could not find packaged on Debian that is required for creating an `.aab`.
 At least it's just one https://github.com/google/bundletool/releases/[jar] file (`VERSION="1.18.3"; wget "https://github.com/google/bundletool/releases/download/${VERSION}/bundletool-all-${VERSION}.jar"`)
 
 For building the `.apk` it uses `aapt2`, and falls back to `aapt` if not present.
 Optimizing `.class` files with `proguard` is optional.
 It supports R8, D8 or DX (in this order) for creating `.dex` files.
+
+Use the target `gradle-project` for creating a minimal target project that can be used by IDE for understanding better the project, it is not used by the build system in any way.
 
 == Usage
 
