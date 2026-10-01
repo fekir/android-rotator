@@ -312,8 +312,8 @@ $(OUT_APK): $(ALIGNED_APK) $(DEBUG_KEYSTORE)
 			"$(ALIGNED_APK)" \
 	)
 
+.PHONY: apk
 apk: $(OUT_APK)
-
 
 # -----------------------------------------------------------------------------
 # Targets for creating aab + apk
@@ -411,7 +411,7 @@ bundle-apk: $(BUNDLE_APK)
 endif
 .PHONY: bundle-apk bundle
 
-all: test-env apk bundle bundle-apk git-install-hooks
+all: test-env apk bundle bundle-apk git-install-hooks build.gradle.kts
 .PHONY: all
 
 lint: $(KOTLIN_JAR)
@@ -450,3 +450,15 @@ endef
 .PHONY: help
 help:
 	$(info $(HELP_TEXT))
+	@:
+
+
+build.gradle.kts: make/build.gradle.in.kts
+	$(info # Generate gradle template)
+	$(call run_silent, \
+		sed \
+			-e 's|@ANDROID_JAR@|$(ANDROID_JAR)|g' \
+			-e 's|@KOTLIN_STDLIB@|$(KOTLIN_STDLIB)|g' \
+			-e 's|@GEN_SRC_DIR@|$(GEN_DIR)|g' \
+			"$<" > "$@" \
+	)
