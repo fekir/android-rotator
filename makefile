@@ -411,7 +411,7 @@ bundle-apk: $(BUNDLE_APK)
 endif
 .PHONY: bundle-apk bundle
 
-all: test-env apk bundle bundle-apk git-install-hooks build.gradle.kts
+all: show-env apk bundle bundle-apk git-install-hooks build.gradle.kts
 .PHONY: all
 
 lint: $(KOTLIN_JAR)
@@ -419,7 +419,7 @@ lint: $(KOTLIN_JAR)
 .PHONY: lint
 
 define HELP_TEXT
-Use "make test-env" to see the environment picked up by make.
+Use "make show-env" to see the environment picked up by make.
 The listed tools can be overwritte one-by-one, althogh some affect others, for example ANDROID_SDK_ROOT and BUILD_TOOLS_ROOT.
 
 Use "make apk" to create an APK.
@@ -439,7 +439,7 @@ Relevant targets:
   help
   lint
 
-  test-env
+  show-env
 
 Modifiers:
   debug   (or DEBUG=1   as environment variable)

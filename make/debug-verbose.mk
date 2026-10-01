@@ -3,8 +3,8 @@ ifndef RUN_SILENT_PATTERN
   $(error RUN_SILENT_PATTERN must be defined before including run-silent.mk)
 endif
 
-force_color = $(if $(filter undefined,$(origin FORCE_COLOR)),,$(FORCE_COLOR))
-no_color    = $(if $(filter undefined,$(origin NO_COLOR)),,$(NO_COLOR))
+force_color := $(if $(filter undefined,$(origin FORCE_COLOR)),,$(FORCE_COLOR))
+no_color    := $(if $(filter undefined,$(origin NO_COLOR)),,$(NO_COLOR))
 
 ESC :=
 RED :=

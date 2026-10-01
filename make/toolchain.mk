@@ -52,7 +52,6 @@ KOTLIN_ANNOT  ?= $(shell find "/usr/share/kotlin/kotlinc/lib/" -name 'annotation
 KOTLIN_STDLIB ?= /usr/share/kotlin/kotlinc/lib/kotlin-stdlib.jar
 PROGUARD      ?= /usr/bin/proguard
 
-SOURCE_DATE_EPOCH ?= 315532800
 
 BUILD_TYPE              := debug
 AAPT_DEBUG_FLAGS        := --debug-mode
@@ -71,31 +70,36 @@ ifneq ($(findstring -P,$(shell "$(ZIPALIGN)" 2>&1)),)
   ZIPALIGN_ALIGNMENT_ARGS := -P 16
 endif
 
-var_status = $(if $(filter undefined,$(origin $(1))),$(YELLOW)<unset>$(RESET),$(if $($(1)),$($(1)),$(YELLOW)<unset>$(RESET)))
+SOURCE_DATE_EPOCH ?= 315532800
+PAGER ?= /usr/bin/less --RAW-CONTROL-CHARS --quit-if-one-screen
+
+var_status  = $(if $(filter undefined,$(origin $(1))),$(YELLOW)<unset>$(RESET),$(if $($(1)),$($(1)),$(YELLOW)<unset>$(RESET)))
 path_status = $($(1))$(if $(wildcard $($(1))),,$(RED) <missing>$(RESET))
 
-.PHONY: test-env
-test-env:
-	@\
-	printf 'Build Environment:\n'; \
-	printf ' %-28s: %s\n' \
-		'ANDROID_SDK_ROOT'          '$(call var_status,ANDROID_SDK_ROOT)' \
-		'BUILD_TOOLS_ROOT'          '$(call var_status,BUILD_TOOLS_ROOT)' \
-	; printf '\n'; \
-	printf ' %-28s: %s\n' \
-		'aapt'                      '$(call path_status,AAPT)' \
-		'aapt2'                     '$(call path_status,AAPT2)' \
-		'  AAPT2_FLAGS'             '$(AAPT_DEBUG_FLAGS)' \
-		'  AAPT_FLAGS'              '$(AAPT_DEBUG_FLAGS)' \
-		'ANDROID_JAR'               '$(call path_status,ANDROID_JAR)' \
-		'apksigner'                 '$(call path_status,APKSIGNER)' \
-		'd8'                        '$(call path_status,D8)' \
-		'  D8_FLAGS'                '$(D8_DEBUG_FLAGS)' \
-		'dx'                        '$(call path_status,DX)' \
-		'javac'                     '$(call path_status,JAVAC)' \
-		'kotlinc'                   '$(call path_status,KOTLINC)' \
-		'lint'                      '$(call path_status,LINT)' \
-		'proguard'                  '$(call path_status,PROGUARD)' \
-		'r8'                        '$(call path_status,R8)' \
-		'zipalign'                  '$(call path_status,ZIPALIGN)' \
-		'  ZIPALIGN_ALIGNMENT_ARGS' '$(ZIPALIGN_ALIGNMENT_ARGS)' \
+.PHONY: show-env
+show-env:
+	@{ \
+		printf 'Build Environment:\n'; \
+		printf ' %-28s: %s\n' \
+			'ANDROID_SDK_ROOT'          '$(call var_status,ANDROID_SDK_ROOT)' \
+			'BUILD_TOOLS_ROOT'          '$(call var_status,BUILD_TOOLS_ROOT)' \
+		; printf '\n'; \
+		printf ' %-28s: %s\n' \
+			'aapt'                      '$(call path_status,AAPT)' \
+			'aapt2'                     '$(call path_status,AAPT2)' \
+			'  AAPT2_FLAGS'             '$(AAPT_DEBUG_FLAGS)' \
+			'  AAPT_FLAGS'              '$(AAPT_DEBUG_FLAGS)' \
+			'ANDROID_JAR'               '$(call path_status,ANDROID_JAR)' \
+			'apksigner'                 '$(call path_status,APKSIGNER)' \
+			'd8'                        '$(call path_status,D8)' \
+			'  D8_FLAGS'                '$(D8_DEBUG_FLAGS)' \
+			'dx'                        '$(call path_status,DX)' \
+			'javac'                     '$(call path_status,JAVAC)' \
+			'kotlinc'                   '$(call path_status,KOTLINC)' \
+			'lint'                      '$(call path_status,LINT)' \
+			'proguard'                  '$(call path_status,PROGUARD)' \
+			'r8'                        '$(call path_status,R8)' \
+			'zipalign'                  '$(call path_status,ZIPALIGN)' \
+			'  ZIPALIGN_ALIGNMENT_ARGS' '$(ZIPALIGN_ALIGNMENT_ARGS) ' \
+		; \
+	} | $(PAGER)

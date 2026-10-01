@@ -8,7 +8,7 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 indent_style = space
 
-[{Makefile,*.mk}]
+[{Makefile,makefile,*.mk}]
 indent_style = tab
 
 [*.{kt,kts}]
