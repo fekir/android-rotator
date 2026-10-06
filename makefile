@@ -82,6 +82,7 @@ $(ANDROIDMANIFEST): $(MANIFEST)
 GEN_DIR := $(BUILD_DIR)/gen/src
 AAPT_PROGUARD := $(BUILD_DIR)/aapt.pro
 R_CLASSES_STAMP := $(BUILD_DIR)/gen/.r-classes.stamp
+GEN_CLASS_DIR := $(BUILD_DIR)/gen/classes
 ifneq ($(wildcard $(AAPT2)),)
 BASE_APK := $(BUILD_DIR)/apk/base.apk
 $(BASE_APK): $(RES_ZIP) $(ANDROID_JAR) $(ANDROIDMANIFEST)
@@ -102,7 +103,6 @@ $(BASE_APK): $(RES_ZIP) $(ANDROID_JAR) $(ANDROIDMANIFEST)
 base.apk: $(BASE_APK)
 .PHONY: base.apk
 
-GEN_CLASS_DIR := $(BUILD_DIR)/gen/classes
 $(R_CLASSES_STAMP): $(BASE_APK)
 	$(info # generate R.class from R.java)
 	@mkdir -p "$(@D)"
