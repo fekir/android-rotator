@@ -450,10 +450,12 @@ You can define additional target in make/user.mk, for example install for instal
 endef
 
 .DEFAULT_GOAL := help
-.PHONY: help
+.PHONY: help .help
 help:
-	$(info $(HELP_TEXT))
+	@$(MAKE) --no-print-directory .help | $(PAGER)
+.help:
 	@:
+	$(info $(HELP_TEXT))
 
 
 build.gradle.kts: make/build.gradle.in.kts
