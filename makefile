@@ -10,10 +10,10 @@ endif
 .EXTRA_PREREQS := $(MAKEFILE_LIST)
 
 RUN_SILENT_PATTERN := warning|deprecated|obsolete
-include make/debug-verbose.mk
-include make/toolchain.mk
-include make/git.mk
--include make/user.mk
+ include make/debug-verbose.mk
+-include make/toolchain.user.mk
+ include make/toolchain.mk
+ include make/git.mk
 
 # -----------------------------------------------------------------------------
 # Source files
@@ -421,6 +421,7 @@ lint: $(KOTLIN_JAR)
 define HELP_TEXT
 Use "make show-env" to see the environment picked up by make.
 The listed tools can be overwritte one-by-one, althogh some affect others, for example ANDROID_SDK_ROOT and BUILD_TOOLS_ROOT.
+Instead of defining env variables, you can put the defined in make/toolchain.user.mk
 
 Use "make apk" to create an APK.
 Use "make bundle" to create an android bundle.
@@ -444,6 +445,8 @@ Relevant targets:
 Modifiers:
   debug   (or DEBUG=1   as environment variable)
   verbose (or VERBOSE=1 as environment variable)
+
+You can define additional target in make/user.mk, for example install for installing the apk on your device
 endef
 
 .DEFAULT_GOAL := help
@@ -462,3 +465,5 @@ build.gradle.kts: make/build.gradle.in.kts
 			-e 's|@GEN_SRC_DIR@|$(GEN_DIR)|g' \
 			"$<" > "$@" \
 	)
+
+-include make/user.mk

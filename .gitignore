@@ -1,3 +1,4 @@
 /build.gradle.kts
 /build/
+/make/toolchain.user.mk
 /make/user.mk
