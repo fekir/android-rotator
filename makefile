@@ -23,7 +23,7 @@ RES_DIR      := app/src/main/res
 RES_FILES    := $(shell find "$(RES_DIR)" -type f 2>/dev/null)
 KOTLIN_FILES := $(shell find "app/src/main/kotlin" -name "*.kt" -type f 2>/dev/null)
 APPNAME      := Rotator
-VERSION_CODE := 1
+VERSION_CODE := 2
 VERSION_NAME := 0.0.$(VERSION_CODE)
 
 # Android - SDK   - Build.VERSION.SDK_INT

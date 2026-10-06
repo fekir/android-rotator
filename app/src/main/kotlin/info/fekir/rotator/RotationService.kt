@@ -93,7 +93,7 @@ class RotationService : Service() {
 
   private fun reapplyLockedRotationIfNeeded() {
     val rotation = lockedRotation ?: return
-    if (canWriteSystemSettings(this)) {
+    if (!canWriteSystemSettings(this)) {
       return
     }
     val currentAccel =
