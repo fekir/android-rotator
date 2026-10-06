@@ -411,7 +411,7 @@ bundle-apk: $(BUNDLE_APK)
 endif
 .PHONY: bundle-apk bundle
 
-all: show-env apk bundle bundle-apk git-install-hooks build.gradle.kts
+all: apk bundle bundle-apk git-install-hooks build.gradle.kts
 .PHONY: all
 
 lint: $(KOTLIN_JAR)
