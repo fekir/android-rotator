@@ -9,12 +9,16 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.database.ContentObserver
 import android.graphics.Color
+import android.graphics.Point
+import android.hardware.display.DisplayManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import android.view.Display
+import android.view.Surface
 import android.widget.RemoteViews
 import android.widget.Toast
 import info.fekir.rotator.R
@@ -43,6 +47,29 @@ class RotationService : Service() {
   // Some devices reverts the orientation when accessing launcher/changing apps (observed on Samsung device).
   private var lockedRotation: Int? = null
   private var settingsObserver: ContentObserver? = null
+
+  private fun buttonRotations(): IntArray {
+    val display = (this.getSystemService(DISPLAY_SERVICE) as DisplayManager).getDisplay(Display.DEFAULT_DISPLAY)
+    val naturalLandscape =
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val mode = display.mode
+        mode.physicalWidth > mode.physicalHeight
+      } else {
+        val size = Point()
+        @Suppress("DEPRECATION")
+        display.getRealSize(size)
+        if (display.rotation == Surface.ROTATION_0 || display.rotation == Surface.ROTATION_180) {
+          size.x > size.y
+        } else {
+          size.y > size.x
+        }
+      }
+    return if (naturalLandscape) {
+      intArrayOf(Surface.ROTATION_270, Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180)
+    } else {
+      intArrayOf(Surface.ROTATION_0, Surface.ROTATION_90, Surface.ROTATION_180, Surface.ROTATION_270)
+    }
+  }
 
   override fun onCreate() {
     super.onCreate()
@@ -99,7 +126,7 @@ class RotationService : Service() {
     val currentAccel =
       Settings.System.getInt(contentResolver, Settings.System.ACCELEROMETER_ROTATION, 1)
     val currentUserRotation =
-      Settings.System.getInt(contentResolver, Settings.System.USER_ROTATION, 0)
+      Settings.System.getInt(contentResolver, Settings.System.USER_ROTATION, Surface.ROTATION_0)
 
     if (currentAccel != 0 || currentUserRotation != rotation) {
       applyLockedRotation(rotation)
@@ -113,7 +140,7 @@ class RotationService : Service() {
   ): Int {
     when (intent?.action) {
       ACTION_ROTATE -> {
-        setRotation(intent.getIntExtra(EXTRA_ROTATION, 0))
+        setRotation(intent.getIntExtra(EXTRA_ROTATION, Surface.ROTATION_0))
       }
 
       ACTION_AUTO -> {
@@ -159,10 +186,9 @@ class RotationService : Service() {
 
   private fun buildNotification(): Notification {
     val views = RemoteViews(packageName, R.layout.notification_rotation)
-    views.setOnClickPendingIntent(R.id.btn_portrait, rotatePendingIntent(0))
-    views.setOnClickPendingIntent(R.id.btn_landscape, rotatePendingIntent(1))
-    views.setOnClickPendingIntent(R.id.btn_portrait_r, rotatePendingIntent(2))
-    views.setOnClickPendingIntent(R.id.btn_landscape_r, rotatePendingIntent(3))
+    val rotations = buttonRotations()
+    assert(rotations.size == ROTATION_BUTTON_IDS.size)
+    ROTATION_BUTTON_IDS.forEachIndexed { index, id -> views.setOnClickPendingIntent(id, rotatePendingIntent(rotations[index])) }
     views.setOnClickPendingIntent(R.id.btn_auto, autoPendingIntent())
     views.setOnClickPendingIntent(R.id.btn_stop, stopPendingIntent())
     highlightSelected(views)
@@ -205,8 +231,9 @@ class RotationService : Service() {
 
   private fun highlightSelected(views: RemoteViews) {
     val selectedRotation = lockedRotation
-    ROTATION_BUTTON_IDS.forEachIndexed { rotation, id ->
-      views.setTextColor(id, if (rotation == selectedRotation) SELECTED_COLOR else DEFAULT_COLOR)
+    val rotations = buttonRotations()
+    ROTATION_BUTTON_IDS.forEachIndexed { index, id ->
+      views.setTextColor(id, if (rotations[index] == selectedRotation) SELECTED_COLOR else DEFAULT_COLOR)
     }
     views.setTextColor(R.id.btn_auto, if (selectedRotation == null) SELECTED_COLOR else DEFAULT_COLOR)
   }
@@ -277,10 +304,6 @@ class RotationService : Service() {
       0
     )
 
-    // 0 = portrait
-    // 1 = landscape
-    // 2 = reverse portrait
-    // 3 = reverse landscape
     Settings.System.putInt(
       contentResolver,
       Settings.System.USER_ROTATION,
