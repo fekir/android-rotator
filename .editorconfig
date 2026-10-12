@@ -15,3 +15,7 @@ indent_style = tab
 ij_kotlin_allow_trailing_comma = false
 ij_kotlin_allow_trailing_comma_on_call_site = false
 indent_style = space
+
+[*.py]
+indent_style = space
+indent_size = 4

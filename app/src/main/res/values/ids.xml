@@ -1,4 +1,8 @@
 <resources>
-  <!-- <item type="id" name="my_text" /> -->
+  <item type="id" name="change_settings_checkbox" />
+  <item type="id" name="notification_settings_checkbox" />
+  <item type="id" name="auto_revoke_settings_checkbox" />
+  <item type="id" name="start_button" />
+  <item type="id" name="autostart_checkbox" />
+  <item type="id" name="stop_button" />
 </resources>
-

@@ -168,6 +168,7 @@ class MainActivity : Activity() {
     }
 
     changeSettingsCheckbox = ActionCheckBox(this)
+    changeSettingsCheckbox.id = R.id.change_settings_checkbox
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
       changeSettingsCheckbox.isChecked = true
     } else {
@@ -183,6 +184,7 @@ class MainActivity : Activity() {
     }
 
     notificationSettingsCheckbox = ActionCheckBox(this)
+    notificationSettingsCheckbox.id = R.id.notification_settings_checkbox
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
       // Note: it is possible to mute an Application on Android 6 too, but
       // * I found no way to query if the application has bene muted
@@ -195,6 +197,7 @@ class MainActivity : Activity() {
     }
 
     autoRevokeSettingsCheckbox = ActionCheckBox(this)
+    autoRevokeSettingsCheckbox.id = R.id.auto_revoke_settings_checkbox
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
       autoRevokeSettingsCheckbox.isChecked = true
     } else {
@@ -215,6 +218,7 @@ class MainActivity : Activity() {
     }
 
     val startButton = Button(this)
+    startButton.id = R.id.start_button
     startButton.text = getString(R.string.start_button, getString(R.string.app_name))
     startButton.setOnClickListener {
       if (!changeSettingsCheckbox.isChecked || !notificationSettingsCheckbox.isChecked) {
@@ -232,6 +236,7 @@ class MainActivity : Activity() {
     layout.addView(startButton)
 
     val autostartCheckBox = CheckBox(this)
+    autostartCheckBox.id = R.id.autostart_checkbox
     autostartCheckBox.text = getString(R.string.start_on_boot_permission)
     autostartCheckBox.isChecked = RotationPrefs.isAutostartEnabled(this)
     autostartCheckBox.setOnCheckedChangeListener { _, isChecked ->
@@ -240,6 +245,7 @@ class MainActivity : Activity() {
     layout.addView(autostartCheckBox)
 
     val stopButton = Button(this)
+    stopButton.id = R.id.stop_button
     stopButton.text = getString(R.string.stop_button, getString(R.string.app_name))
     stopButton.setOnClickListener {
       stopService(Intent(this, RotationService::class.java))
