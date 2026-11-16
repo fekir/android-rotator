@@ -2,3 +2,4 @@
 /build/
 /make/toolchain.user.mk
 /make/user.mk
+/.gradle

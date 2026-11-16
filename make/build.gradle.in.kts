@@ -18,7 +18,7 @@ sourceSets {
 }
 
 dependencies {
-  compileOnly(files("@ANDROID_JAR@", "@KOTLIN_STDLIB@"))
+  compileOnly(files("@ANDROID_JAR@", "@KOTLIN_STDLIB@", "@KOTLIN_ANNOT@"))
 }
 
 idea {

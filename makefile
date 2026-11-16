@@ -464,6 +464,7 @@ build.gradle.kts: make/build.gradle.in.kts
 		sed \
 			-e 's|@ANDROID_JAR@|$(ANDROID_JAR)|g' \
 			-e 's|@KOTLIN_STDLIB@|$(KOTLIN_STDLIB)|g' \
+			-e 's|@KOTLIN_ANNOT@|$(KOTLIN_ANNOT)|g' \
 			-e 's|@GEN_SRC_DIR@|$(GEN_DIR)|g' \
 			"$<" > "$@" \
 	)
