@@ -1,5 +1,6 @@
+/.gradle
 /build.gradle.kts
 /build/
+/debug.keystore
 /make/toolchain.user.mk
 /make/user.mk
-/.gradle
