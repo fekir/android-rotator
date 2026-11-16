@@ -27,7 +27,9 @@ For building the `.apk` it uses `aapt2`, and falls back to `aapt` if not present
 Optimizing `.class` files with `proguard` is optional.
 It supports R8, D8 or DX (in this order) for creating `.dex` files.
 
-Use the target `gradle-project` for creating a minimal target project that can be used by IDE for understanding better the project, it is not used by the build system in any way.
+Use the target `build.gradle.kts` for creating a gradle project file that can be used by IDE for understanding better the code, it is not used by the make build system.
+
+Build with `make apk`; the APK is written to `build` and named `Rotator.apk`.
 
 == Usage
 
